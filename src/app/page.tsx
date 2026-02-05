@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List } from 'lucide-react';
 import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
 import CampagneDetails from '@/components/CampagneDetails';
+import CampagneTable from '@/components/CampagneTable';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [cardSize, setCardSize] = useState(2); // 0-4
   const [sortField, setSortField] = useState<SortField>('dateAjout');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -292,8 +294,34 @@ export default function HomePage() {
           </p>
 
           <div className="flex items-center gap-4">
+            {/* Basculement vue */}
+            <div className="flex items-center bg-white rounded-lg border border-slate-200 p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title="Vue vignettes"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title="Vue tableau"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* Contrôle de taille */}
-            <div className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1">
+            <div className={`flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 ${viewMode === 'table' ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
                 onClick={() => setCardSize(Math.max(0, cardSize - 1))}
                 className="p-1 text-slate-500 hover:text-slate-700 disabled:opacity-50"
@@ -349,19 +377,27 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Grille de campagnes */}
+        {/* Grille ou Tableau de campagnes */}
         {filteredCampagnes.length > 0 ? (
-          <div className="flex flex-wrap gap-4">
-            {filteredCampagnes.map((campagne) => (
-              <CampagneCard
-                key={campagne.id}
-                campagne={campagne}
-                size={cardSize}
-                onClick={() => handleCardClick(campagne)}
-                onEdit={() => handleCardEdit(campagne)}
-              />
-            ))}
-          </div>
+          viewMode === 'grid' ? (
+            <div className="flex flex-wrap gap-4">
+              {filteredCampagnes.map((campagne) => (
+                <CampagneCard
+                  key={campagne.id}
+                  campagne={campagne}
+                  size={cardSize}
+                  onClick={() => handleCardClick(campagne)}
+                  onEdit={() => handleCardEdit(campagne)}
+                />
+              ))}
+            </div>
+          ) : (
+            <CampagneTable
+              campagnes={filteredCampagnes}
+              onRowClick={handleCardClick}
+              onEdit={handleCardEdit}
+            />
+          )
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
             <div className="text-6xl mb-4">🚀</div>
