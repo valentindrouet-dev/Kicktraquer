@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List, Calendar } from 'lucide-react';
 import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
 import CampagneDetails from '@/components/CampagneDetails';
 import CampagneTable from '@/components/CampagneTable';
+import CampagneTimeline from '@/components/CampagneTimeline';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
-type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison';
+type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue';
 type SortOrder = 'asc' | 'desc';
 
 export default function HomePage() {
@@ -25,9 +26,9 @@ export default function HomePage() {
   const [selectedStatut, setSelectedStatut] = useState<string>('');
   const [selectedPropriete, setSelectedPropriete] = useState<string>('');
   const [cardSize, setCardSize] = useState(2); // 0-4
-  const [sortField, setSortField] = useState<SortField>('dateAjout');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [sortField, setSortField] = useState<SortField>('livraison');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -96,6 +97,11 @@ export default function HomePage() {
           const livraisonA = (a.anneeLivraison || 9999) * 100 + (a.moisLivraison || 99);
           const livraisonB = (b.anneeLivraison || 9999) * 100 + (b.moisLivraison || 99);
           comparison = livraisonA - livraisonB;
+          break;
+        case 'langue':
+          const langueA = a.langue || '';
+          const langueB = b.langue || '';
+          comparison = langueA.localeCompare(langueB);
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -318,10 +324,21 @@ export default function HomePage() {
               >
                 <List className="w-4 h-4" />
               </button>
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`p-1.5 rounded transition-colors ${
+                  viewMode === 'timeline'
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+                title="Vue timeline"
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Contrôle de taille */}
-            <div className={`flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 ${viewMode === 'table' ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 ${viewMode !== 'grid' ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
                 onClick={() => setCardSize(Math.max(0, cardSize - 1))}
                 className="p-1 text-slate-500 hover:text-slate-700 disabled:opacity-50"
@@ -362,6 +379,7 @@ export default function HomePage() {
                 <option value="prixPledge">Prix</option>
                 <option value="dateAjout">Date d'ajout</option>
                 <option value="livraison">Livraison</option>
+                <option value="langue">Langue</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -377,7 +395,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Grille ou Tableau de campagnes */}
+        {/* Grille, Tableau ou Timeline de campagnes */}
         {filteredCampagnes.length > 0 ? (
           viewMode === 'grid' ? (
             <div className="flex flex-wrap gap-4">
@@ -391,10 +409,16 @@ export default function HomePage() {
                 />
               ))}
             </div>
-          ) : (
+          ) : viewMode === 'table' ? (
             <CampagneTable
               campagnes={filteredCampagnes}
               onRowClick={handleCardClick}
+              onEdit={handleCardEdit}
+            />
+          ) : (
+            <CampagneTimeline
+              campagnes={filteredCampagnes}
+              onCampagneClick={handleCardClick}
               onEdit={handleCardEdit}
             />
           )

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Campagne } from '@/types';
-import { ExternalLink, Pencil } from 'lucide-react';
+import { ExternalLink, Pencil, Truck } from 'lucide-react';
 
 interface CampagneCardProps {
   campagne: Campagne;
@@ -89,10 +89,23 @@ export default function CampagneCard({ campagne, size, onClick, onEdit }: Campag
         )}
         {/* Badge statut - caché en mode mini */}
         {!isMinimalMode && (
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
             <span className={`badge ${getStatutBadgeClass(campagne.statut)}`}>
               {campagne.statut}
             </span>
+            {/* Icône frais de port non payés */}
+            {campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
+              <span className="badge bg-red-500 text-white flex items-center gap-1" title="Frais de port à payer">
+                <Truck className="w-3 h-3" />
+                <span className="text-[10px]">FP</span>
+              </span>
+            )}
+          </div>
+        )}
+        {/* Indicateur frais de port en mode mini */}
+        {isMinimalMode && campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
+          <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port à payer">
+            <Truck className="w-2.5 h-2.5 text-white" />
           </div>
         )}
         {/* Bouton édition - visible au hover */}

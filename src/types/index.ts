@@ -22,10 +22,12 @@ export interface Campagne {
   niveauPledge: string;
   prixPledge: number;
   fraisPort: number;
+  fraisPortPayes?: boolean;  // Frais de port déjà payés ?
   devise: string;
   statut: string;
   langue?: string;           // Langue du pledge de base
   propriete?: string;        // BGG ou Perso
+  financementTotal?: number; // Financement total du jeu (objectif atteint)
   paiements: Paiement[];
   addons: Addon[];
   moisLivraison?: number;  // 1-12

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { X, ExternalLink, Calendar, CreditCard, Package, Tag, Building, Globe, User } from 'lucide-react';
+import { X, ExternalLink, Calendar, CreditCard, Package, Tag, Building, Globe, User, Truck, TrendingUp } from 'lucide-react';
 import { Campagne } from '@/types';
 
 interface CampagneDetailsProps {
@@ -172,7 +172,15 @@ export default function CampagneDetails({ campagne, onClose, onEdit }: CampagneD
               </div>
               <div>
                 <p className="text-xs text-slate-500">Frais de port</p>
-                <p className="font-medium">{formatMontant(campagne.fraisPort, campagne.devise)}</p>
+                <p className="font-medium flex items-center gap-2">
+                  {formatMontant(campagne.fraisPort, campagne.devise)}
+                  {campagne.fraisPort > 0 && (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${campagne.fraisPortPayes ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <Truck className="w-3 h-3" />
+                      {campagne.fraisPortPayes ? 'Payés' : 'À payer'}
+                    </span>
+                  )}
+                </p>
               </div>
               {campagne.idEngagement && (
                 <div>
@@ -184,6 +192,15 @@ export default function CampagneDetails({ campagne, onClose, onEdit }: CampagneD
                 <div>
                   <p className="text-xs text-slate-500">Fin de campagne</p>
                   <p className="font-medium">{formatDate(campagne.dateFinCampagne)}</p>
+                </div>
+              )}
+              {campagne.financementTotal && (
+                <div>
+                  <p className="text-xs text-slate-500">Financement total</p>
+                  <p className="font-medium flex items-center gap-1">
+                    <TrendingUp className="w-4 h-4 text-green-500" />
+                    {new Intl.NumberFormat('fr-FR').format(campagne.financementTotal)} {campagne.devise}
+                  </p>
                 </div>
               )}
             </div>

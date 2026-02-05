@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres } from '@/lib/storage';
-import { TrendingUp, Package, CreditCard, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { TrendingUp, Package, CreditCard, Clock, CheckCircle, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface StatCard {
   label: string;
@@ -20,6 +20,13 @@ export default function StatistiquesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [deviseAffichage, setDeviseAffichage] = useState('EUR');
 
+  // Filtres
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedPlateforme, setSelectedPlateforme] = useState<string>('');
+  const [selectedStatut, setSelectedStatut] = useState<string>('');
+  const [selectedPropriete, setSelectedPropriete] = useState<string>('');
+  const [selectedLangue, setSelectedLangue] = useState<string>('');
+
   const loadData = () => {
     const c = getCampagnes();
     const p = getParametres();
@@ -32,9 +39,48 @@ export default function StatistiquesPage() {
     loadData();
   }, []);
 
+  // Campagnes filtrées
+  const filteredCampagnes = useMemo(() => {
+    let result = [...campagnes];
+    if (selectedPlateforme) {
+      result = result.filter((c) => c.plateforme === selectedPlateforme);
+    }
+    if (selectedStatut) {
+      result = result.filter((c) => c.statut === selectedStatut);
+    }
+    if (selectedPropriete) {
+      result = result.filter((c) => (c.propriete || 'Perso') === selectedPropriete);
+    }
+    if (selectedLangue) {
+      result = result.filter((c) => c.langue === selectedLangue);
+    }
+    return result;
+  }, [campagnes, selectedPlateforme, selectedStatut, selectedPropriete, selectedLangue]);
+
+  // Valeurs uniques pour les filtres
+  const plateformesUtilisees = useMemo(() => {
+    const set = new Set(campagnes.map((c) => c.plateforme));
+    return Array.from(set).sort();
+  }, [campagnes]);
+
+  const statutsUtilises = useMemo(() => {
+    const set = new Set(campagnes.map((c) => c.statut));
+    return Array.from(set).sort();
+  }, [campagnes]);
+
+  const proprietesUtilisees = useMemo(() => {
+    const set = new Set(campagnes.map((c) => c.propriete || 'Perso'));
+    return Array.from(set).sort();
+  }, [campagnes]);
+
+  const languesUtilisees = useMemo(() => {
+    const set = new Set(campagnes.map((c) => c.langue).filter(Boolean));
+    return Array.from(set).sort() as string[];
+  }, [campagnes]);
+
   // Statistiques calculées
   const stats = useMemo(() => {
-    if (campagnes.length === 0) return null;
+    if (filteredCampagnes.length === 0) return null;
 
     // Par plateforme
     const parPlateforme: Record<string, { count: number; total: number }> = {};
@@ -46,7 +92,7 @@ export default function StatistiquesPage() {
     let totalAddons = 0;
     let totalPaye = 0;
 
-    campagnes.forEach((c) => {
+    filteredCampagnes.forEach((c) => {
       // Conversion simplifiée (dans la vraie vie, utiliser une API de taux de change)
       const multiplier = c.devise === deviseAffichage ? 1 :
         c.devise === 'USD' && deviseAffichage === 'EUR' ? 0.92 :
@@ -79,13 +125,13 @@ export default function StatistiquesPage() {
     const resteAPayer = totalDu - totalPaye;
 
     // Campagnes livrées vs en attente
-    const livrees = campagnes.filter((c) => c.statut === 'Livré').length;
-    const enAttente = campagnes.filter((c) =>
+    const livrees = filteredCampagnes.filter((c) => c.statut === 'Livré').length;
+    const enAttente = filteredCampagnes.filter((c) =>
       !['Livré', 'Annulé', 'Remboursé'].includes(c.statut)
     ).length;
 
     return {
-      nombreTotal: campagnes.length,
+      nombreTotal: filteredCampagnes.length,
       totalPledge,
       totalFraisPort,
       totalAddons,
@@ -96,9 +142,9 @@ export default function StatistiquesPage() {
       parStatut,
       livrees,
       enAttente,
-      moyennePledge: totalPledge / campagnes.length,
+      moyennePledge: totalPledge / filteredCampagnes.length,
     };
-  }, [campagnes, deviseAffichage]);
+  }, [filteredCampagnes, deviseAffichage]);
 
   const formatMontant = (montant: number) => {
     const symbols: Record<string, string> = {
@@ -175,14 +221,119 @@ export default function StatistiquesPage() {
           </select>
         </div>
 
-        {campagnes.length === 0 ? (
+        {/* Filtres */}
+        <div className="bg-white rounded-xl border border-slate-200 mb-6">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-slate-500" />
+              <span className="font-medium text-slate-700">Filtres</span>
+              {(selectedPlateforme || selectedStatut || selectedPropriete || selectedLangue) && (
+                <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">
+                  {[selectedPlateforme, selectedStatut, selectedPropriete, selectedLangue].filter(Boolean).length} actif(s)
+                </span>
+              )}
+            </div>
+            {showFilters ? (
+              <ChevronUp className="w-5 h-5 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-slate-400" />
+            )}
+          </button>
+
+          {showFilters && (
+            <div className="p-4 pt-0 border-t border-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Plateforme
+                  </label>
+                  <select
+                    value={selectedPlateforme}
+                    onChange={(e) => setSelectedPlateforme(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Toutes</option>
+                    {plateformesUtilisees.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Statut
+                  </label>
+                  <select
+                    value={selectedStatut}
+                    onChange={(e) => setSelectedStatut(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Tous</option>
+                    {statutsUtilises.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Propriété
+                  </label>
+                  <select
+                    value={selectedPropriete}
+                    onChange={(e) => setSelectedPropriete(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Toutes</option>
+                    {proprietesUtilisees.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Langue
+                  </label>
+                  <select
+                    value={selectedLangue}
+                    onChange={(e) => setSelectedLangue(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Toutes</option>
+                    {languesUtilisees.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {(selectedPlateforme || selectedStatut || selectedPropriete || selectedLangue) && (
+                <button
+                  onClick={() => {
+                    setSelectedPlateforme('');
+                    setSelectedStatut('');
+                    setSelectedPropriete('');
+                    setSelectedLangue('');
+                  }}
+                  className="mt-4 text-sm text-primary-600 hover:text-primary-700"
+                >
+                  Réinitialiser les filtres
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {filteredCampagnes.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
             <div className="text-6xl mb-4">📊</div>
             <h3 className="text-lg font-medium text-slate-800 mb-2">
-              Aucune donnée
+              {campagnes.length === 0 ? 'Aucune donnée' : 'Aucune campagne trouvée'}
             </h3>
             <p className="text-slate-500">
-              Ajoutez des campagnes pour voir les statistiques.
+              {campagnes.length === 0
+                ? 'Ajoutez des campagnes pour voir les statistiques.'
+                : 'Essayez de modifier vos filtres de recherche.'}
             </p>
           </div>
         ) : (

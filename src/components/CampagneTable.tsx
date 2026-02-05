@@ -1,7 +1,7 @@
 'use client';
 
 import { Campagne } from '@/types';
-import { Pencil, ExternalLink } from 'lucide-react';
+import { Pencil, ExternalLink, Truck } from 'lucide-react';
 
 interface CampagneTableProps {
   campagnes: Campagne[];
@@ -110,9 +110,17 @@ export default function CampagneTable({ campagnes, onRowClick, onEdit }: Campagn
                   <td className="py-3 px-4 text-sm text-slate-600">{campagne.editeur}</td>
                   <td className="py-3 px-4 text-sm text-slate-600">{campagne.plateforme}</td>
                   <td className="py-3 px-4">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
-                      {campagne.statut}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
+                        {campagne.statut}
+                      </span>
+                      {campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium" title="Frais de port à payer">
+                          <Truck className="w-3 h-3" />
+                          FP
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4 text-sm text-slate-600">{campagne.niveauPledge || '-'}</td>
                   <td className="py-3 px-4 text-sm text-slate-800 font-medium text-right">

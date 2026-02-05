@@ -35,10 +35,12 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   niveauPledge: '',
   prixPledge: 0,
   fraisPort: 0,
+  fraisPortPayes: false,
   devise: 'EUR',
   statut: 'En cours',
   langue: '',
   propriete: 'Perso',
+  financementTotal: undefined,
   paiements: [],
   addons: [],
   moisLivraison: undefined,
@@ -265,7 +267,7 @@ export default function CampagneModal({
           </div>
 
           {/* Prix */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Prix du pledge
@@ -291,6 +293,18 @@ export default function CampagneModal({
                 onChange={(e) => setFormData({ ...formData, fraisPort: parseFloat(e.target.value) || 0 })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
+              {/* Checkbox Frais de port payés */}
+              {formData.fraisPort > 0 && (
+                <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.fraisPortPayes || false}
+                    onChange={(e) => setFormData({ ...formData, fraisPortPayes: e.target.checked })}
+                    className="w-4 h-4 text-primary-600 rounded border-slate-300 focus:ring-primary-500"
+                  />
+                  <span className="text-xs text-slate-600">FP payés</span>
+                </label>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -305,6 +319,20 @@ export default function CampagneModal({
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Financement total
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={formData.financementTotal || ''}
+                onChange={(e) => setFormData({ ...formData, financementTotal: e.target.value ? parseFloat(e.target.value) : undefined })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ex: 500000"
+              />
             </div>
           </div>
 
