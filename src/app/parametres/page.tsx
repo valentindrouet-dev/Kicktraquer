@@ -215,6 +215,18 @@ export default function ParametresPage() {
             items={parametres.typesPaiement}
             onChange={(items) => handleChange('typesPaiement', items)}
           />
+
+          <ListEditor
+            title="Langues"
+            items={parametres.langues || ['', 'Français', 'Anglais']}
+            onChange={(items) => handleChange('langues', items)}
+          />
+
+          <ListEditor
+            title="Propriétés"
+            items={parametres.proprietes || ['Perso', 'BGG']}
+            onChange={(items) => handleChange('proprietes', items)}
+          />
         </div>
 
         <div className="mt-8 bg-white rounded-xl border border-slate-200 p-6">

@@ -37,6 +37,8 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   fraisPort: 0,
   devise: 'EUR',
   statut: 'En cours',
+  langue: '',
+  propriete: 'Perso',
   paiements: [],
   addons: [],
   moisLivraison: undefined,
@@ -190,7 +192,7 @@ export default function CampagneModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Plateforme
@@ -216,6 +218,34 @@ export default function CampagneModal({
               >
                 {parametres.statuts.map((s) => (
                   <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Langue
+              </label>
+              <select
+                value={formData.langue || ''}
+                onChange={(e) => setFormData({ ...formData, langue: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {(parametres.langues || ['', 'Français', 'Anglais']).map((l) => (
+                  <option key={l} value={l}>{l || '-- Non spécifié --'}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Propriété
+              </label>
+              <select
+                value={formData.propriete || 'Perso'}
+                onChange={(e) => setFormData({ ...formData, propriete: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {(parametres.proprietes || ['Perso', 'BGG']).map((p) => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>
@@ -299,15 +329,24 @@ export default function CampagneModal({
                 {formData.addons.map((addon, index) => (
                   <div
                     key={addon.id}
-                    className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg"
+                    className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg flex-wrap"
                   >
                     <input
                       type="text"
                       value={addon.nom}
                       onChange={(e) => handleUpdateAddon(index, 'nom', e.target.value)}
-                      className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                      className="flex-1 min-w-[120px] px-2 py-1 border border-slate-300 rounded text-sm"
                       placeholder="Nom de l'add-on"
                     />
+                    <select
+                      value={addon.langue || ''}
+                      onChange={(e) => handleUpdateAddon(index, 'langue', e.target.value)}
+                      className="w-24 px-2 py-1 border border-slate-300 rounded text-sm"
+                    >
+                      {(parametres.langues || ['', 'Français', 'Anglais']).map((l) => (
+                        <option key={l} value={l}>{l || 'Langue'}</option>
+                      ))}
+                    </select>
                     <input
                       type="number"
                       step="0.01"

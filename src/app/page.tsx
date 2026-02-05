@@ -5,8 +5,9 @@ import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle } 
 import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
+import CampagneDetails from '@/components/CampagneDetails';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
-import { getCampagnes, saveCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
+import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
 type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison';
 type SortOrder = 'asc' | 'desc';
@@ -21,12 +22,14 @@ export default function HomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPlateforme, setSelectedPlateforme] = useState<string>('');
   const [selectedStatut, setSelectedStatut] = useState<string>('');
+  const [selectedPropriete, setSelectedPropriete] = useState<string>('');
   const [cardSize, setCardSize] = useState(2); // 0-4
   const [sortField, setSortField] = useState<SortField>('dateAjout');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [selectedCampagne, setSelectedCampagne] = useState<Campagne | null>(null);
 
   // Charger les données
@@ -65,6 +68,9 @@ export default function HomePage() {
     if (selectedStatut) {
       result = result.filter((c) => c.statut === selectedStatut);
     }
+    if (selectedPropriete) {
+      result = result.filter((c) => (c.propriete || 'Perso') === selectedPropriete);
+    }
 
     // Tri
     result.sort((a, b) => {
@@ -94,7 +100,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, sortField, sortOrder]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder]);
 
   // Handlers
   const handleSave = (campagne: Campagne) => {
@@ -112,11 +118,22 @@ export default function HomePage() {
     deleteCampagne(id);
     loadData();
     setShowModal(false);
+    setShowDetails(false);
     setSelectedCampagne(null);
   };
 
   const handleCardClick = (campagne: Campagne) => {
     setSelectedCampagne(campagne);
+    setShowDetails(true);
+  };
+
+  const handleCardEdit = (campagne: Campagne) => {
+    setSelectedCampagne(campagne);
+    setShowModal(true);
+  };
+
+  const handleEditFromDetails = () => {
+    setShowDetails(false);
     setShowModal(true);
   };
 
@@ -133,6 +150,11 @@ export default function HomePage() {
 
   const statutsUtilises = useMemo(() => {
     const set = new Set(campagnes.map((c) => c.statut));
+    return Array.from(set).sort();
+  }, [campagnes]);
+
+  const proprietesUtilisees = useMemo(() => {
+    const set = new Set(campagnes.map((c) => c.propriete || 'Perso'));
     return Array.from(set).sort();
   }, [campagnes]);
 
@@ -185,9 +207,9 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-slate-500" />
               <span className="font-medium text-slate-700">Filtres</span>
-              {(selectedPlateforme || selectedStatut) && (
+              {(selectedPlateforme || selectedStatut || selectedPropriete) && (
                 <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">
-                  {[selectedPlateforme, selectedStatut].filter(Boolean).length} actif(s)
+                  {[selectedPlateforme, selectedStatut, selectedPropriete].filter(Boolean).length} actif(s)
                 </span>
               )}
             </div>
@@ -200,7 +222,7 @@ export default function HomePage() {
 
           {showFilters && (
             <div className="p-4 pt-0 border-t border-slate-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
                     Plateforme
@@ -231,12 +253,28 @@ export default function HomePage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Propriété
+                  </label>
+                  <select
+                    value={selectedPropriete}
+                    onChange={(e) => setSelectedPropriete(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">Toutes</option>
+                    {proprietesUtilisees.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              {(selectedPlateforme || selectedStatut) && (
+              {(selectedPlateforme || selectedStatut || selectedPropriete) && (
                 <button
                   onClick={() => {
                     setSelectedPlateforme('');
                     setSelectedStatut('');
+                    setSelectedPropriete('');
                   }}
                   className="mt-4 text-sm text-primary-600 hover:text-primary-700"
                 >
@@ -320,6 +358,7 @@ export default function HomePage() {
                 campagne={campagne}
                 size={cardSize}
                 onClick={() => handleCardClick(campagne)}
+                onEdit={() => handleCardEdit(campagne)}
               />
             ))}
           </div>
@@ -327,16 +366,16 @@ export default function HomePage() {
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
             <div className="text-6xl mb-4">🚀</div>
             <h3 className="text-lg font-medium text-slate-800 mb-2">
-              {searchQuery || selectedPlateforme || selectedStatut
+              {searchQuery || selectedPlateforme || selectedStatut || selectedPropriete
                 ? 'Aucune campagne trouvée'
                 : 'Aucune campagne'}
             </h3>
             <p className="text-slate-500 mb-4">
-              {searchQuery || selectedPlateforme || selectedStatut
+              {searchQuery || selectedPlateforme || selectedStatut || selectedPropriete
                 ? 'Essayez de modifier vos filtres de recherche.'
                 : 'Commencez par ajouter votre première campagne de financement participatif.'}
             </p>
-            {!searchQuery && !selectedPlateforme && !selectedStatut && (
+            {!searchQuery && !selectedPlateforme && !selectedStatut && !selectedPropriete && (
               <button
                 onClick={handleAjouter}
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
@@ -348,7 +387,7 @@ export default function HomePage() {
         )}
       </main>
 
-      {/* Modal */}
+      {/* Modal édition */}
       {showModal && (
         <CampagneModal
           campagne={selectedCampagne}
@@ -359,6 +398,18 @@ export default function HomePage() {
             setShowModal(false);
             setSelectedCampagne(null);
           }}
+        />
+      )}
+
+      {/* Modal détails */}
+      {showDetails && selectedCampagne && (
+        <CampagneDetails
+          campagne={selectedCampagne}
+          onClose={() => {
+            setShowDetails(false);
+            setSelectedCampagne(null);
+          }}
+          onEdit={handleEditFromDetails}
         />
       )}
     </div>

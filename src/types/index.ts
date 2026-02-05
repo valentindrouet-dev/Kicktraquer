@@ -11,6 +11,7 @@ export interface Addon {
   nom: string;
   prix: number;
   quantite: number;
+  langue?: string;  // Langue de l'add-on
 }
 
 export interface Campagne {
@@ -23,6 +24,8 @@ export interface Campagne {
   fraisPort: number;
   devise: string;
   statut: string;
+  langue?: string;           // Langue du pledge de base
+  propriete?: string;        // BGG ou Perso
   paiements: Paiement[];
   addons: Addon[];
   moisLivraison?: number;  // 1-12
@@ -41,6 +44,8 @@ export interface Parametres {
   statuts: string[];
   devises: string[];
   typesPaiement: string[];
+  langues: string[];
+  proprietes: string[];
 }
 
 export interface AppData {
@@ -75,5 +80,7 @@ export const PARAMETRES_DEFAUT: Parametres = {
     'Frais de port',
     'Taxe/Douane',
     'Remboursement'
-  ]
+  ],
+  langues: ['', 'Français', 'Anglais'],
+  proprietes: ['Perso', 'BGG']
 };

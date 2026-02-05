@@ -2,12 +2,13 @@
 
 import Image from 'next/image';
 import { Campagne } from '@/types';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Pencil } from 'lucide-react';
 
 interface CampagneCardProps {
   campagne: Campagne;
   size: number;
   onClick: () => void;
+  onEdit: () => void;
 }
 
 function getStatutBadgeClass(statut: string): string {
@@ -49,7 +50,7 @@ function formatMontant(montant: number, devise: string): string {
   return `${montant.toFixed(2)} ${symbol}`;
 }
 
-export default function CampagneCard({ campagne, size, onClick }: CampagneCardProps) {
+export default function CampagneCard({ campagne, size, onClick, onEdit }: CampagneCardProps) {
   const totalAddons = (campagne.addons || []).reduce((sum, a) => sum + (a.prix * a.quantite), 0);
   const totalPaye = campagne.paiements.reduce((sum, p) => sum + p.montant, 0);
   const totalDu = campagne.prixPledge + campagne.fraisPort + totalAddons;
@@ -63,7 +64,7 @@ export default function CampagneCard({ campagne, size, onClick }: CampagneCardPr
 
   return (
     <div
-      className={`bg-white overflow-hidden cursor-pointer card-hover border border-slate-200 ${isMinimalMode ? 'rounded-lg' : 'rounded-xl shadow-sm'}`}
+      className={`bg-white overflow-hidden cursor-pointer card-hover border border-slate-200 group ${isMinimalMode ? 'rounded-lg' : 'rounded-xl shadow-sm'}`}
       style={{ width: `${cardWidth}px` }}
       onClick={onClick}
       title={campagne.nomJeu}
@@ -94,6 +95,17 @@ export default function CampagneCard({ campagne, size, onClick }: CampagneCardPr
             </span>
           </div>
         )}
+        {/* Bouton édition - visible au hover */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className={`absolute ${isMinimalMode ? 'bottom-1 right-1 p-1' : 'bottom-2 right-2 p-1.5'} bg-white/90 rounded-full hover:bg-white transition-all opacity-0 group-hover:opacity-100`}
+          title="Modifier"
+        >
+          <Pencil className={`${isMinimalMode ? 'w-3 h-3' : 'w-4 h-4'} text-slate-600`} />
+        </button>
         {/* Lien externe - caché en mode mini */}
         {!isMinimalMode && campagne.urlCampagne && (
           <a
