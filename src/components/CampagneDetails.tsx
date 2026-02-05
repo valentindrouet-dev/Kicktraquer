@@ -1,13 +1,18 @@
 'use client';
 
 import Image from 'next/image';
-import { X, ExternalLink, Calendar, CreditCard, Package, Tag, Building, Globe, User, Truck, TrendingUp } from 'lucide-react';
+import { X, ExternalLink, Calendar, CreditCard, Package, Tag, Building, Globe, User, Truck, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useCallback } from 'react';
 import { Campagne } from '@/types';
 
 interface CampagneDetailsProps {
   campagne: Campagne;
   onClose: () => void;
   onEdit: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 const MOIS_NOMS = [
@@ -60,7 +65,23 @@ function getStatutColor(statut: string): string {
   }
 }
 
-export default function CampagneDetails({ campagne, onClose, onEdit }: CampagneDetailsProps) {
+export default function CampagneDetails({ campagne, onClose, onEdit, onPrevious, onNext, hasPrevious, hasNext }: CampagneDetailsProps) {
+  // Navigation au clavier
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' && hasPrevious && onPrevious) {
+      onPrevious();
+    } else if (e.key === 'ArrowRight' && hasNext && onNext) {
+      onNext();
+    } else if (e.key === 'Escape') {
+      onClose();
+    }
+  }, [hasPrevious, hasNext, onPrevious, onNext, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   const totalAddons = (campagne.addons || []).reduce((sum, a) => sum + (a.prix * a.quantite), 0);
   const totalPaye = campagne.paiements.reduce((sum, p) => sum + p.montant, 0);
   const totalDu = campagne.prixPledge + campagne.fraisPort + totalAddons;
@@ -72,6 +93,28 @@ export default function CampagneDetails({ campagne, onClose, onEdit }: CampagneD
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-8">
+      {/* Bouton précédent */}
+      {hasPrevious && onPrevious && (
+        <button
+          onClick={onPrevious}
+          className="fixed left-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors z-50"
+          title="Campagne précédente (←)"
+        >
+          <ChevronLeft className="w-6 h-6 text-slate-700" />
+        </button>
+      )}
+
+      {/* Bouton suivant */}
+      {hasNext && onNext && (
+        <button
+          onClick={onNext}
+          className="fixed right-4 top-1/2 -translate-y-1/2 p-3 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors z-50"
+          title="Campagne suivante (→)"
+        >
+          <ChevronRight className="w-6 h-6 text-slate-700" />
+        </button>
+      )}
+
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full mx-4 my-auto">
         {/* Header avec image */}
         <div className="relative">

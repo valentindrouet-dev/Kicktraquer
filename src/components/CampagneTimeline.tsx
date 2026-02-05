@@ -17,6 +17,12 @@ const MOIS = [
 ];
 
 export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }: CampagneTimelineProps) {
+  // Date actuelle
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1; // 1-12
+  const currentDay = today.getDate();
+
   // Grouper les campagnes par année puis par mois
   const campagnesParAnneeEtMois = useMemo(() => {
     const parAnnee: Record<number, Record<number, Campagne[]>> = {};
@@ -116,6 +122,21 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                       />
                     ))}
                   </div>
+
+                  {/* Marqueur de la date actuelle */}
+                  {annee === currentYear && (
+                    <div
+                      className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
+                      style={{
+                        left: `${((currentMonth - 1) / 12) * 100 + ((currentDay / 31) * (100 / 12))}%`
+                      }}
+                    >
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap font-medium">
+                        Aujourd'hui
+                      </div>
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full" />
+                    </div>
+                  )}
 
                   {/* Campagnes groupées par mois et empilées verticalement */}
                   {Object.entries(campagnesParAnneeEtMois[annee]).map(([mois, campagnesDuMois]) => {

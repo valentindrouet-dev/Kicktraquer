@@ -150,6 +150,23 @@ export default function HomePage() {
     setShowModal(true);
   };
 
+  // Navigation entre campagnes
+  const currentIndex = selectedCampagne
+    ? filteredCampagnes.findIndex((c) => c.id === selectedCampagne.id)
+    : -1;
+
+  const handlePreviousCampagne = () => {
+    if (currentIndex > 0) {
+      setSelectedCampagne(filteredCampagnes[currentIndex - 1]);
+    }
+  };
+
+  const handleNextCampagne = () => {
+    if (currentIndex < filteredCampagnes.length - 1) {
+      setSelectedCampagne(filteredCampagnes[currentIndex + 1]);
+    }
+  };
+
   const handleAjouter = () => {
     setSelectedCampagne(null);
     setShowModal(true);
@@ -477,6 +494,10 @@ export default function HomePage() {
             setSelectedCampagne(null);
           }}
           onEdit={handleEditFromDetails}
+          onPrevious={handlePreviousCampagne}
+          onNext={handleNextCampagne}
+          hasPrevious={currentIndex > 0}
+          hasNext={currentIndex < filteredCampagnes.length - 1}
         />
       )}
     </div>

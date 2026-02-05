@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres } from '@/lib/storage';
-import { TrendingUp, Package, CreditCard, Clock, CheckCircle, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, Package, CreditCard, Clock, CheckCircle, Filter, ChevronDown, ChevronUp, Calendar, Truck, Globe, Building } from 'lucide-react';
 
 interface StatCard {
   label: string;
@@ -86,11 +86,21 @@ export default function StatistiquesPage() {
     const parPlateforme: Record<string, { count: number; total: number }> = {};
     // Par statut
     const parStatut: Record<string, number> = {};
+    // Par année de paiement
+    const paiementsParAnnee: Record<number, number> = {};
+    // Par année de livraison prévue
+    const livraisonsParAnnee: Record<number, { count: number; total: number }> = {};
+    // Par langue
+    const parLangue: Record<string, { count: number; total: number }> = {};
+    // Par éditeur
+    const parEditeur: Record<string, { count: number; total: number }> = {};
     // Totaux
     let totalPledge = 0;
     let totalFraisPort = 0;
     let totalAddons = 0;
     let totalPaye = 0;
+    let totalFinancementGlobal = 0;
+    let fraisPortNonRenseignes = 0;
 
     filteredCampagnes.forEach((c) => {
       // Conversion simplifiée (dans la vraie vie, utiliser une API de taux de change)
@@ -103,22 +113,63 @@ export default function StatistiquesPage() {
       const pledgeConverti = c.prixPledge * multiplier;
       const portConverti = c.fraisPort * multiplier;
       const addonsConverti = (c.addons || []).reduce((sum, a) => sum + (a.prix * a.quantite), 0) * multiplier;
-      const payeConverti = c.paiements.reduce((sum, p) => sum + p.montant, 0) * multiplier;
+      const totalCampagne = pledgeConverti + portConverti + addonsConverti;
 
       totalPledge += pledgeConverti;
       totalFraisPort += portConverti;
       totalAddons += addonsConverti;
-      totalPaye += payeConverti;
+
+      // Financement total global
+      if (c.financementTotal) {
+        totalFinancementGlobal += c.financementTotal * multiplier;
+      }
+
+      // Frais de port non renseignés
+      if (!c.fraisPort || c.fraisPort === 0) {
+        fraisPortNonRenseignes++;
+      }
+
+      // Paiements par année
+      c.paiements.forEach((p) => {
+        const annee = new Date(p.date).getFullYear();
+        const montantConverti = p.montant * multiplier;
+        paiementsParAnnee[annee] = (paiementsParAnnee[annee] || 0) + montantConverti;
+        totalPaye += montantConverti;
+      });
 
       // Par plateforme
       if (!parPlateforme[c.plateforme]) {
         parPlateforme[c.plateforme] = { count: 0, total: 0 };
       }
       parPlateforme[c.plateforme].count++;
-      parPlateforme[c.plateforme].total += pledgeConverti + portConverti + addonsConverti;
+      parPlateforme[c.plateforme].total += totalCampagne;
 
       // Par statut
       parStatut[c.statut] = (parStatut[c.statut] || 0) + 1;
+
+      // Par année de livraison
+      if (c.anneeLivraison) {
+        if (!livraisonsParAnnee[c.anneeLivraison]) {
+          livraisonsParAnnee[c.anneeLivraison] = { count: 0, total: 0 };
+        }
+        livraisonsParAnnee[c.anneeLivraison].count++;
+        livraisonsParAnnee[c.anneeLivraison].total += totalCampagne;
+      }
+
+      // Par langue
+      const langue = c.langue || 'Non spécifiée';
+      if (!parLangue[langue]) {
+        parLangue[langue] = { count: 0, total: 0 };
+      }
+      parLangue[langue].count++;
+      parLangue[langue].total += totalCampagne;
+
+      // Par éditeur
+      if (!parEditeur[c.editeur]) {
+        parEditeur[c.editeur] = { count: 0, total: 0 };
+      }
+      parEditeur[c.editeur].count++;
+      parEditeur[c.editeur].total += totalCampagne;
     });
 
     const totalDu = totalPledge + totalFraisPort + totalAddons;
@@ -130,6 +181,11 @@ export default function StatistiquesPage() {
       !['Livré', 'Annulé', 'Remboursé'].includes(c.statut)
     ).length;
 
+    // Top 5 éditeurs
+    const topEditeurs = Object.entries(parEditeur)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 5);
+
     return {
       nombreTotal: filteredCampagnes.length,
       totalPledge,
@@ -140,6 +196,12 @@ export default function StatistiquesPage() {
       resteAPayer,
       parPlateforme,
       parStatut,
+      paiementsParAnnee,
+      livraisonsParAnnee,
+      parLangue,
+      topEditeurs,
+      totalFinancementGlobal,
+      fraisPortNonRenseignes,
       livrees,
       enAttente,
       moyennePledge: totalPledge / filteredCampagnes.length,
@@ -440,7 +502,7 @@ export default function StatistiquesPage() {
             </div>
 
             {/* Moyennes */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
               <h2 className="text-lg font-semibold text-slate-800 mb-4">
                 Moyennes
               </h2>
@@ -462,6 +524,173 @@ export default function StatistiquesPage() {
                   <p className="text-xl font-bold text-slate-800">
                     {stats && formatMontant(stats.totalDu / stats.nombreTotal)}
                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Paiements par année */}
+            {stats && Object.keys(stats.paiementsParAnnee).length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <CreditCard className="w-5 h-5 text-slate-400" />
+                  <h2 className="text-lg font-semibold text-slate-800">Paiements par année</h2>
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(stats.paiementsParAnnee)
+                    .sort(([a], [b]) => Number(b) - Number(a))
+                    .map(([annee, montant]) => (
+                      <div key={annee} className="flex items-center justify-between">
+                        <span className="text-slate-700 font-medium">{annee}</span>
+                        <span className="text-lg font-bold text-green-600">{formatMontant(montant)}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Livraisons prévues par année et Langues */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Livraisons par année */}
+              {stats && Object.keys(stats.livraisonsParAnnee).length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="w-5 h-5 text-slate-400" />
+                    <h2 className="text-lg font-semibold text-slate-800">Livraisons prévues par année</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {Object.entries(stats.livraisonsParAnnee)
+                      .sort(([a], [b]) => Number(a) - Number(b))
+                      .map(([annee, data]) => (
+                        <div key={annee} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-700 font-medium">{annee}</span>
+                            <span className="text-xs text-slate-500">({data.count} jeu{data.count > 1 ? 'x' : ''})</span>
+                          </div>
+                          <span className="font-medium text-slate-800">{formatMontant(data.total)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Par langue */}
+              {stats && Object.keys(stats.parLangue).length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Globe className="w-5 h-5 text-slate-400" />
+                    <h2 className="text-lg font-semibold text-slate-800">Par langue</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {Object.entries(stats.parLangue)
+                      .sort((a, b) => b[1].count - a[1].count)
+                      .map(([langue, data]) => {
+                        const percentage = (data.count / stats.nombreTotal) * 100;
+                        return (
+                          <div key={langue}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-slate-700">{langue}</span>
+                              <span className="text-sm">
+                                <span className="font-medium text-slate-800">{data.count}</span>
+                                <span className="text-slate-500 ml-1">({formatMontant(data.total)})</span>
+                              </span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full bg-primary-500 transition-all"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Top éditeurs et Alertes */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Top éditeurs */}
+              {stats && stats.topEditeurs.length > 0 && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Building className="w-5 h-5 text-slate-400" />
+                    <h2 className="text-lg font-semibold text-slate-800">Top 5 Éditeurs</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {stats.topEditeurs.map(([editeur, data], index) => (
+                      <div key={editeur} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-bold">
+                            {index + 1}
+                          </span>
+                          <span className="text-slate-700">{editeur}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium text-slate-800">{data.count} campagne{data.count > 1 ? 's' : ''}</span>
+                          <span className="text-slate-500 text-sm ml-2">({formatMontant(data.total)})</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Alertes et infos */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Truck className="w-5 h-5 text-slate-400" />
+                  <h2 className="text-lg font-semibold text-slate-800">Alertes & Informations</h2>
+                </div>
+                <div className="space-y-4">
+                  {stats && stats.fraisPortNonRenseignes > 0 && (
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                          <Truck className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-red-700">Frais de port non renseignés</span>
+                      </div>
+                      <span className="text-lg font-bold text-red-700">{stats.fraisPortNonRenseignes}</span>
+                    </div>
+                  )}
+                  {stats && stats.totalFinancementGlobal > 0 && (
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-green-700">Financement total des campagnes</span>
+                      </div>
+                      <span className="text-lg font-bold text-green-700">{formatMontant(stats.totalFinancementGlobal)}</span>
+                    </div>
+                  )}
+                  {stats && (
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <Package className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-blue-700">Taux de livraison</span>
+                      </div>
+                      <span className="text-lg font-bold text-blue-700">
+                        {((stats.livrees / stats.nombreTotal) * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
+                  {stats && stats.resteAPayer > 0 && (
+                    <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <Clock className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-orange-700">Pourcentage payé</span>
+                      </div>
+                      <span className="text-lg font-bold text-orange-700">
+                        {((stats.totalPaye / stats.totalDu) * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
