@@ -8,7 +8,7 @@ import CampagneModal from '@/components/CampagneModal';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, saveCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
-type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'dateLivraison';
+type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison';
 type SortOrder = 'asc' | 'desc';
 
 export default function HomePage() {
@@ -79,10 +79,15 @@ export default function HomePage() {
           comparison = a.prixPledge - b.prixPledge;
           break;
         case 'dateAjout':
-        case 'dateLivraison':
-          const dateA = a[sortField] || '';
-          const dateB = b[sortField] || '';
+          const dateA = a.dateAjout || '';
+          const dateB = b.dateAjout || '';
           comparison = dateA.localeCompare(dateB);
+          break;
+        case 'livraison':
+          // Tri par année puis mois
+          const livraisonA = (a.anneeLivraison || 9999) * 100 + (a.moisLivraison || 99);
+          const livraisonB = (b.anneeLivraison || 9999) * 100 + (b.moisLivraison || 99);
+          comparison = livraisonA - livraisonB;
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -290,7 +295,7 @@ export default function HomePage() {
                 <option value="plateforme">Plateforme</option>
                 <option value="prixPledge">Prix</option>
                 <option value="dateAjout">Date d'ajout</option>
-                <option value="dateLivraison">Livraison</option>
+                <option value="livraison">Livraison</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}

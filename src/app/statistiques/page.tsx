@@ -43,6 +43,7 @@ export default function StatistiquesPage() {
     // Totaux
     let totalPledge = 0;
     let totalFraisPort = 0;
+    let totalAddons = 0;
     let totalPaye = 0;
 
     campagnes.forEach((c) => {
@@ -55,10 +56,12 @@ export default function StatistiquesPage() {
 
       const pledgeConverti = c.prixPledge * multiplier;
       const portConverti = c.fraisPort * multiplier;
+      const addonsConverti = (c.addons || []).reduce((sum, a) => sum + (a.prix * a.quantite), 0) * multiplier;
       const payeConverti = c.paiements.reduce((sum, p) => sum + p.montant, 0) * multiplier;
 
       totalPledge += pledgeConverti;
       totalFraisPort += portConverti;
+      totalAddons += addonsConverti;
       totalPaye += payeConverti;
 
       // Par plateforme
@@ -66,13 +69,13 @@ export default function StatistiquesPage() {
         parPlateforme[c.plateforme] = { count: 0, total: 0 };
       }
       parPlateforme[c.plateforme].count++;
-      parPlateforme[c.plateforme].total += pledgeConverti + portConverti;
+      parPlateforme[c.plateforme].total += pledgeConverti + portConverti + addonsConverti;
 
       // Par statut
       parStatut[c.statut] = (parStatut[c.statut] || 0) + 1;
     });
 
-    const totalDu = totalPledge + totalFraisPort;
+    const totalDu = totalPledge + totalFraisPort + totalAddons;
     const resteAPayer = totalDu - totalPaye;
 
     // Campagnes livrées vs en attente
@@ -85,6 +88,7 @@ export default function StatistiquesPage() {
       nombreTotal: campagnes.length,
       totalPledge,
       totalFraisPort,
+      totalAddons,
       totalDu,
       totalPaye,
       resteAPayer,
@@ -123,7 +127,7 @@ export default function StatistiquesPage() {
     {
       label: 'Total engagé',
       value: formatMontant(stats.totalDu),
-      subValue: `Pledges: ${formatMontant(stats.totalPledge)} | Port: ${formatMontant(stats.totalFraisPort)}`,
+      subValue: `Pledges: ${formatMontant(stats.totalPledge)} | Add-ons: ${formatMontant(stats.totalAddons)} | Port: ${formatMontant(stats.totalFraisPort)}`,
       icon: <TrendingUp className="w-6 h-6" />,
       color: 'bg-green-500',
     },

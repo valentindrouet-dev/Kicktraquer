@@ -2,8 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import { Campagne, Paiement, Parametres } from '@/types';
+import { Campagne, Paiement, Addon, Parametres } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+
+const MOIS = [
+  { value: 1, label: 'Janvier' },
+  { value: 2, label: 'Février' },
+  { value: 3, label: 'Mars' },
+  { value: 4, label: 'Avril' },
+  { value: 5, label: 'Mai' },
+  { value: 6, label: 'Juin' },
+  { value: 7, label: 'Juillet' },
+  { value: 8, label: 'Août' },
+  { value: 9, label: 'Septembre' },
+  { value: 10, label: 'Octobre' },
+  { value: 11, label: 'Novembre' },
+  { value: 12, label: 'Décembre' },
+];
 
 interface CampagneModalProps {
   campagne?: Campagne | null;
@@ -23,10 +38,14 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   devise: 'EUR',
   statut: 'En cours',
   paiements: [],
-  dateLivraison: '',
+  addons: [],
+  moisLivraison: undefined,
+  anneeLivraison: undefined,
   dateFinCampagne: '',
   imageUrl: '',
   urlCampagne: '',
+  urlBGG: '',
+  idEngagement: '',
   notes: '',
 };
 
@@ -43,7 +62,12 @@ export default function CampagneModal({
   useEffect(() => {
     if (campagne) {
       const { id, dateAjout, ...rest } = campagne;
-      setFormData(rest);
+      // Assurer la compatibilité avec les anciens champs
+      setFormData({
+        ...EMPTY_CAMPAGNE,
+        ...rest,
+        addons: rest.addons || [],
+      });
     } else {
       setFormData({
         ...EMPTY_CAMPAGNE,
@@ -90,8 +114,35 @@ export default function CampagneModal({
     });
   };
 
+  const handleAddAddon = () => {
+    const newAddon: Addon = {
+      id: uuidv4(),
+      nom: '',
+      prix: 0,
+      quantite: 1,
+    };
+    setFormData({
+      ...formData,
+      addons: [...formData.addons, newAddon],
+    });
+  };
+
+  const handleUpdateAddon = (index: number, field: keyof Addon, value: string | number) => {
+    const updatedAddons = [...formData.addons];
+    updatedAddons[index] = { ...updatedAddons[index], [field]: value };
+    setFormData({ ...formData, addons: updatedAddons });
+  };
+
+  const handleRemoveAddon = (index: number) => {
+    setFormData({
+      ...formData,
+      addons: formData.addons.filter((_, i) => i !== index),
+    });
+  };
+
+  const totalAddons = formData.addons.reduce((sum, a) => sum + (Number(a.prix) * Number(a.quantite)), 0);
   const totalPaye = formData.paiements.reduce((sum, p) => sum + Number(p.montant), 0);
-  const totalDu = Number(formData.prixPledge) + Number(formData.fraisPort);
+  const totalDu = Number(formData.prixPledge) + Number(formData.fraisPort) + totalAddons;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-8">
@@ -227,6 +278,88 @@ export default function CampagneModal({
             </div>
           </div>
 
+          {/* Addons */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Add-ons
+              </label>
+              <button
+                type="button"
+                onClick={handleAddAddon}
+                className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </button>
+            </div>
+
+            {formData.addons.length > 0 ? (
+              <div className="space-y-2">
+                {formData.addons.map((addon, index) => (
+                  <div
+                    key={addon.id}
+                    className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg"
+                  >
+                    <input
+                      type="text"
+                      value={addon.nom}
+                      onChange={(e) => handleUpdateAddon(index, 'nom', e.target.value)}
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                      placeholder="Nom de l'add-on"
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={addon.prix}
+                      onChange={(e) => handleUpdateAddon(index, 'prix', parseFloat(e.target.value) || 0)}
+                      className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+                      placeholder="Prix"
+                    />
+                    <span className="text-slate-500 text-sm">x</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={addon.quantite}
+                      onChange={(e) => handleUpdateAddon(index, 'quantite', parseInt(e.target.value) || 1)}
+                      className="w-14 px-2 py-1 border border-slate-300 rounded text-sm"
+                    />
+                    <span className="text-slate-600 text-sm w-20 text-right">
+                      = {(addon.prix * addon.quantite).toFixed(2)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAddon(index)}
+                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <div className="text-right text-sm text-slate-600">
+                  Total add-ons : <span className="font-medium">{totalAddons.toFixed(2)} {formData.devise}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">Aucun add-on</p>
+            )}
+          </div>
+
+          {/* ID Engagement */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              ID de l'engagement
+            </label>
+            <input
+              type="text"
+              value={formData.idEngagement || ''}
+              onChange={(e) => setFormData({ ...formData, idEngagement: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Ex: #123456"
+            />
+          </div>
+
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -244,17 +377,32 @@ export default function CampagneModal({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Livraison prévue
               </label>
-              <input
-                type="date"
-                value={formData.dateLivraison || ''}
-                onChange={(e) => setFormData({ ...formData, dateLivraison: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={formData.moisLivraison || ''}
+                  onChange={(e) => setFormData({ ...formData, moisLivraison: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="">Mois</option>
+                  {MOIS.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  min="2020"
+                  max="2035"
+                  placeholder="Année"
+                  value={formData.anneeLivraison || ''}
+                  onChange={(e) => setFormData({ ...formData, anneeLivraison: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="w-24 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
             </div>
           </div>
 
           {/* URLs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 URL de la campagne
@@ -265,6 +413,18 @@ export default function CampagneModal({
                 onChange={(e) => setFormData({ ...formData, urlCampagne: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                URL BoardGameGeek
+              </label>
+              <input
+                type="url"
+                value={formData.urlBGG || ''}
+                onChange={(e) => setFormData({ ...formData, urlBGG: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="https://boardgamegeek.com/..."
               />
             </div>
             <div>

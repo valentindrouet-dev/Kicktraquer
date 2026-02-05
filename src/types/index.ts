@@ -6,6 +6,13 @@ export interface Paiement {
   notes?: string;
 }
 
+export interface Addon {
+  id: string;
+  nom: string;
+  prix: number;
+  quantite: number;
+}
+
 export interface Campagne {
   id: string;
   nomJeu: string;
@@ -17,10 +24,14 @@ export interface Campagne {
   devise: string;
   statut: string;
   paiements: Paiement[];
-  dateLivraison?: string;
+  addons: Addon[];
+  moisLivraison?: number;  // 1-12
+  anneeLivraison?: number; // ex: 2026
   dateFinCampagne?: string;
   imageUrl?: string;
   urlCampagne?: string;
+  urlBGG?: string;         // URL BoardGameGeek
+  idEngagement?: string;   // ID de l'engagement/pledge
   notes?: string;
   dateAjout: string;
 }
