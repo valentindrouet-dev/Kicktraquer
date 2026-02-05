@@ -1,12 +1,18 @@
 'use client';
 
 import { Campagne } from '@/types';
-import { Pencil, ExternalLink, Truck } from 'lucide-react';
+import { Pencil, ExternalLink, Truck, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+
+type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal';
+type SortOrder = 'asc' | 'desc';
 
 interface CampagneTableProps {
   campagnes: Campagne[];
   onRowClick: (campagne: Campagne) => void;
   onEdit: (campagne: Campagne) => void;
+  sortField?: SortField;
+  sortOrder?: SortOrder;
+  onSort?: (field: SortField) => void;
 }
 
 const MOIS_NOMS = [
@@ -53,21 +59,86 @@ function getStatutColor(statut: string): string {
   }
 }
 
-export default function CampagneTable({ campagnes, onRowClick, onEdit }: CampagneTableProps) {
+interface SortableHeaderProps {
+  label: string;
+  field: SortField;
+  currentField?: SortField;
+  currentOrder?: SortOrder;
+  onSort?: (field: SortField) => void;
+  align?: 'left' | 'right' | 'center';
+}
+
+function SortableHeader({ label, field, currentField, currentOrder, onSort, align = 'left' }: SortableHeaderProps) {
+  const isActive = currentField === field;
+  const alignClass = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
+
+  return (
+    <th
+      className={`py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors select-none`}
+      onClick={() => onSort?.(field)}
+    >
+      <div className={`flex items-center gap-1 ${alignClass}`}>
+        <span>{label}</span>
+        {isActive ? (
+          currentOrder === 'asc' ? (
+            <ChevronUp className="w-4 h-4 text-primary-600" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-primary-600" />
+          )
+        ) : (
+          <ChevronsUpDown className="w-3 h-3 text-slate-400" />
+        )}
+      </div>
+    </th>
+  );
+}
+
+export default function CampagneTable({ campagnes, onRowClick, onEdit, sortField, sortOrder, onSort }: CampagneTableProps) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Jeu</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Éditeur</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Plateforme</th>
+              <SortableHeader
+                label="Jeu"
+                field="nomJeu"
+                currentField={sortField}
+                currentOrder={sortOrder}
+                onSort={onSort}
+              />
+              <SortableHeader
+                label="Éditeur"
+                field="editeur"
+                currentField={sortField}
+                currentOrder={sortOrder}
+                onSort={onSort}
+              />
+              <SortableHeader
+                label="Plateforme"
+                field="plateforme"
+                currentField={sortField}
+                currentOrder={sortOrder}
+                onSort={onSort}
+              />
               <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Statut</th>
               <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Pledge</th>
-              <th className="text-right py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</th>
+              <SortableHeader
+                label="Total"
+                field="prixPledge"
+                currentField={sortField}
+                currentOrder={sortOrder}
+                onSort={onSort}
+                align="right"
+              />
               <th className="text-right py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Payé</th>
-              <th className="text-left py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Livraison</th>
+              <SortableHeader
+                label="Livraison"
+                field="livraison"
+                currentField={sortField}
+                currentOrder={sortOrder}
+                onSort={onSort}
+              />
               <th className="text-center py-3 px-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>

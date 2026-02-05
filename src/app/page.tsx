@@ -438,6 +438,16 @@ export default function HomePage() {
               campagnes={filteredCampagnes}
               onRowClick={handleCardClick}
               onEdit={handleCardEdit}
+              sortField={sortField}
+              sortOrder={sortOrder}
+              onSort={(field) => {
+                if (field === sortField) {
+                  setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                } else {
+                  setSortField(field);
+                  setSortOrder('asc');
+                }
+              }}
             />
           ) : (
             <CampagneTimeline
