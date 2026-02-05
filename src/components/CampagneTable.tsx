@@ -114,11 +114,10 @@ export default function CampagneTable({ campagnes, onRowClick, onEdit }: Campagn
                       <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
                         {campagne.statut}
                       </span>
-                      {campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium" title="Frais de port à payer">
-                          <Truck className="w-3 h-3" />
-                          FP
-                        </span>
+                      {(!campagne.fraisPort || campagne.fraisPort === 0) && (
+                        <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
+                          <Truck className="w-3 h-3 text-white" />
+                        </div>
                       )}
                     </div>
                   </td>

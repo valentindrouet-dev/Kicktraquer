@@ -11,7 +11,7 @@ import CampagneTimeline from '@/components/CampagneTimeline';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
-type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue';
+type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal';
 type SortOrder = 'asc' | 'desc';
 
 export default function HomePage() {
@@ -102,6 +102,11 @@ export default function HomePage() {
           const langueA = a.langue || '';
           const langueB = b.langue || '';
           comparison = langueA.localeCompare(langueB);
+          break;
+        case 'financementTotal':
+          const finA = a.financementTotal || 0;
+          const finB = b.financementTotal || 0;
+          comparison = finA - finB;
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -380,6 +385,7 @@ export default function HomePage() {
                 <option value="dateAjout">Date d'ajout</option>
                 <option value="livraison">Livraison</option>
                 <option value="langue">Langue</option>
+                <option value="financementTotal">Financement Total</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -404,6 +410,7 @@ export default function HomePage() {
                   key={campagne.id}
                   campagne={campagne}
                   size={cardSize}
+                  sortField={sortField}
                   onClick={() => handleCardClick(campagne)}
                   onEdit={() => handleCardEdit(campagne)}
                 />

@@ -173,13 +173,15 @@ export default function CampagneDetails({ campagne, onClose, onEdit }: CampagneD
               <div>
                 <p className="text-xs text-slate-500">Frais de port</p>
                 <p className="font-medium flex items-center gap-2">
-                  {formatMontant(campagne.fraisPort, campagne.devise)}
-                  {campagne.fraisPort > 0 && (
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${campagne.fraisPortPayes ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      <Truck className="w-3 h-3" />
-                      {campagne.fraisPortPayes ? 'Payés' : 'À payer'}
-                    </span>
-                  )}
+                  {campagne.fraisPort && campagne.fraisPort > 0
+                    ? formatMontant(campagne.fraisPort, campagne.devise)
+                    : <span className="flex items-center gap-1">
+                        <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
+                          <Truck className="w-3 h-3 text-white" />
+                        </span>
+                        <span className="text-red-600 text-sm">Non renseignés</span>
+                      </span>
+                  }
                 </p>
               </div>
               {campagne.idEngagement && (

@@ -4,12 +4,20 @@ import Image from 'next/image';
 import { Campagne } from '@/types';
 import { ExternalLink, Pencil, Truck } from 'lucide-react';
 
+type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal';
+
 interface CampagneCardProps {
   campagne: Campagne;
   size: number;
+  sortField?: SortField;
   onClick: () => void;
   onEdit: () => void;
 }
+
+const MOIS_NOMS = [
+  '', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
+  'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'
+];
 
 function getStatutBadgeClass(statut: string): string {
   const normalized = statut.toLowerCase().replace(/\s+/g, '-');
@@ -50,7 +58,11 @@ function formatMontant(montant: number, devise: string): string {
   return `${montant.toFixed(2)} ${symbol}`;
 }
 
-export default function CampagneCard({ campagne, size, onClick, onEdit }: CampagneCardProps) {
+function formatNumber(n: number): string {
+  return new Intl.NumberFormat('fr-FR').format(n);
+}
+
+export default function CampagneCard({ campagne, size, sortField, onClick, onEdit }: CampagneCardProps) {
   const totalAddons = (campagne.addons || []).reduce((sum, a) => sum + (a.prix * a.quantite), 0);
   const totalPaye = campagne.paiements.reduce((sum, p) => sum + p.montant, 0);
   const totalDu = campagne.prixPledge + campagne.fraisPort + totalAddons;
@@ -61,6 +73,32 @@ export default function CampagneCard({ campagne, size, onClick, onEdit }: Campag
   const isMinimalMode = size <= 1;
   const cardWidth = isMinimalMode ? (80 + size * 40) : (150 + size * 30); // De 80px à 270px
   const imageHeight = isMinimalMode ? cardWidth : (100 + size * 25); // Carré en mode mini
+
+  // Calcul de la sous-ligne dynamique basée sur le mode de tri
+  const getSubLine = (): string => {
+    switch (sortField) {
+      case 'editeur':
+      case 'nomJeu':
+        return campagne.editeur;
+      case 'plateforme':
+        return campagne.plateforme;
+      case 'prixPledge':
+        return formatMontant(campagne.prixPledge, campagne.devise);
+      case 'dateAjout':
+        return campagne.dateAjout ? new Date(campagne.dateAjout).toLocaleDateString('fr-FR') : '-';
+      case 'livraison':
+        if (campagne.moisLivraison && campagne.anneeLivraison) {
+          return `${MOIS_NOMS[campagne.moisLivraison]} ${campagne.anneeLivraison}`;
+        }
+        return 'Non définie';
+      case 'langue':
+        return campagne.langue || 'Non spécifiée';
+      case 'financementTotal':
+        return campagne.financementTotal ? `${formatNumber(campagne.financementTotal)} ${campagne.devise}` : 'Non renseigné';
+      default:
+        return campagne.editeur;
+    }
+  };
 
   return (
     <div
@@ -89,22 +127,21 @@ export default function CampagneCard({ campagne, size, onClick, onEdit }: Campag
         )}
         {/* Badge statut - caché en mode mini */}
         {!isMinimalMode && (
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
+          <div className="absolute top-2 left-2 flex items-center gap-1">
             <span className={`badge ${getStatutBadgeClass(campagne.statut)}`}>
               {campagne.statut}
             </span>
-            {/* Icône frais de port non payés */}
-            {campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
-              <span className="badge bg-red-500 text-white flex items-center gap-1" title="Frais de port à payer">
-                <Truck className="w-3 h-3" />
-                <span className="text-[10px]">FP</span>
-              </span>
+            {/* Icône frais de port non renseignés */}
+            {(!campagne.fraisPort || campagne.fraisPort === 0) && (
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
+                <Truck className="w-3 h-3 text-white" />
+              </div>
             )}
           </div>
         )}
         {/* Indicateur frais de port en mode mini */}
-        {isMinimalMode && campagne.fraisPort > 0 && !campagne.fraisPortPayes && (
-          <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port à payer">
+        {isMinimalMode && (!campagne.fraisPort || campagne.fraisPort === 0) && (
+          <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
             <Truck className="w-2.5 h-2.5 text-white" />
           </div>
         )}
@@ -139,7 +176,7 @@ export default function CampagneCard({ campagne, size, onClick, onEdit }: Campag
           <h3 className="font-semibold text-slate-800 truncate" title={campagne.nomJeu}>
             {campagne.nomJeu}
           </h3>
-          <p className="text-sm text-slate-500 truncate">{campagne.editeur}</p>
+          <p className="text-sm text-slate-500 truncate">{getSubLine()}</p>
 
           {size >= 3 && (
             <div className="mt-2 pt-2 border-t border-slate-100">
