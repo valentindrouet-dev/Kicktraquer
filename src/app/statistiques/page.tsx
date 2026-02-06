@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres } from '@/lib/storage';
+import { getCampagnesSupabase, getParametresSupabase } from '@/lib/supabase-storage';
+import { useAuth } from '@/contexts/AuthContext';
 import { TrendingUp, Package, CreditCard, Clock, CheckCircle, Filter, ChevronDown, ChevronUp, Calendar, Truck, Globe, Building } from 'lucide-react';
 
 interface StatCard {
@@ -15,6 +17,7 @@ interface StatCard {
 }
 
 export default function StatistiquesPage() {
+  const { user, loading: authLoading } = useAuth();
   const [campagnes, setCampagnes] = useState<Campagne[]>([]);
   const [parametres, setParametres] = useState<Parametres>(PARAMETRES_DEFAUT);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,17 +30,33 @@ export default function StatistiquesPage() {
   const [selectedPropriete, setSelectedPropriete] = useState<string>('');
   const [selectedLangue, setSelectedLangue] = useState<string>('');
 
-  const loadData = () => {
-    const c = getCampagnes();
-    const p = getParametres();
-    setCampagnes(c);
-    setParametres(p);
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (user) {
+        // Supabase
+        const c = await getCampagnesSupabase();
+        const p = await getParametresSupabase();
+        setCampagnes(c);
+        setParametres(p);
+      } else {
+        // localStorage
+        const c = getCampagnes();
+        const p = getParametres();
+        setCampagnes(c);
+        setParametres(p);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+    }
     setIsLoading(false);
-  };
+  }, [user]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, loadData]);
 
   // Campagnes filtrées
   const filteredCampagnes = useMemo(() => {
