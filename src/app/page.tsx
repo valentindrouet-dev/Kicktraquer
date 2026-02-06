@@ -317,7 +317,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50">
       <Header onAjouter={handleAjouter} onDataChange={loadData} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
         {/* Bannière mode */}
         {user ? (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
@@ -552,7 +552,13 @@ export default function HomePage() {
         {/* Grille, Tableau ou Timeline de campagnes */}
         {filteredCampagnes.length > 0 ? (
           viewMode === 'grid' ? (
-            <div className="flex flex-wrap gap-4">
+            <div
+              className="grid gap-3 sm:gap-4"
+              style={{
+                gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize <= 1 ? (80 + cardSize * 40) : (150 + cardSize * 30)}px, max-content))`,
+                justifyContent: 'center',
+              }}
+            >
               {filteredCampagnes.map((campagne) => (
                 <CampagneCard
                   key={campagne.id}

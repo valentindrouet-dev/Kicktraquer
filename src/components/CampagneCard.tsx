@@ -73,6 +73,9 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
   const cardWidth = isMinimalMode ? (80 + size * 40) : (150 + size * 30); // De 80px à 270px
   const imageHeight = isMinimalMode ? cardWidth : (100 + size * 25); // Carré en mode mini
 
+  // Sur mobile, les cartes peuvent s'étendre jusqu'à leur taille max ou 100% de l'écran
+  const mobileMaxWidth = Math.min(cardWidth * 1.2, 320);
+
   // Calcul de la sous-ligne dynamique basée sur le mode de tri
   const getSubLine = (): string => {
     switch (sortField) {
