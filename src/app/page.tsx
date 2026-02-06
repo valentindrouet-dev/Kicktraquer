@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List, Calendar } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List, Calendar, Cloud } from 'lucide-react';
 import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
@@ -10,6 +10,8 @@ import CampagneTable, { SortField, ColumnConfig, DEFAULT_COLUMNS } from '@/compo
 import CampagneTimeline from '@/components/CampagneTimeline';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
+import { getCampagnesSupabase, getParametresSupabase, addCampagneSupabase, updateCampagneSupabase, deleteCampagneSupabase } from '@/lib/supabase-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SortOrder = 'asc' | 'desc';
 
@@ -21,6 +23,7 @@ const STORAGE_KEYS = {
 };
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
   const [campagnes, setCampagnes] = useState<Campagne[]>([]);
   const [parametres, setParametres] = useState<Parametres>(PARAMETRES_DEFAUT);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,18 +45,44 @@ export default function HomePage() {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedCampagne, setSelectedCampagne] = useState<Campagne | null>(null);
 
-  // Charger les données
-  const loadData = () => {
-    const c = getCampagnes();
-    const p = getParametres();
-    setCampagnes(c);
-    setParametres(p);
+  // Charger les données (Supabase si connecté, sinon localStorage)
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (user) {
+        // Utilisateur connecté -> Supabase
+        const [c, p] = await Promise.all([
+          getCampagnesSupabase(),
+          getParametresSupabase()
+        ]);
+        setCampagnes(c);
+        setParametres(p);
+      } else {
+        // Non connecté -> localStorage
+        const c = getCampagnes();
+        const p = getParametres();
+        setCampagnes(c);
+        setParametres(p);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      // Fallback sur localStorage en cas d'erreur
+      const c = getCampagnes();
+      const p = getParametres();
+      setCampagnes(c);
+      setParametres(p);
+    }
     setIsLoading(false);
-  };
+  }, [user]);
+
+  // Recharger les données quand l'utilisateur change
+  useEffect(() => {
+    if (!authLoading) {
+      loadData();
+    }
+  }, [user, authLoading, loadData]);
 
   useEffect(() => {
-    loadData();
-
     // Charger les préférences depuis localStorage
     const savedSortField = localStorage.getItem(STORAGE_KEYS.SORT_FIELD);
     const savedSortOrder = localStorage.getItem(STORAGE_KEYS.SORT_ORDER);
@@ -66,7 +95,6 @@ export default function HomePage() {
     if (savedColumns) {
       try {
         const parsed = JSON.parse(savedColumns);
-        // Fusionner avec les colonnes par défaut pour gérer les nouvelles colonnes
         const merged = DEFAULT_COLUMNS.map(defaultCol => {
           const saved = parsed.find((c: ColumnConfig) => c.id === defaultCol.id);
           return saved ? { ...defaultCol, visible: saved.visible } : defaultCol;
@@ -140,7 +168,6 @@ export default function HomePage() {
           comparison = dateA.localeCompare(dateB);
           break;
         case 'livraison':
-          // Tri par année puis mois
           const livraisonA = (a.anneeLivraison || 9999) * 100 + (a.moisLivraison || 99);
           const livraisonB = (b.anneeLivraison || 9999) * 100 + (b.moisLivraison || 99);
           comparison = livraisonA - livraisonB;
@@ -184,20 +211,42 @@ export default function HomePage() {
   }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder]);
 
   // Handlers
-  const handleSave = (campagne: Campagne) => {
-    if (selectedCampagne) {
-      updateCampagne(campagne);
-    } else {
-      addCampagne(campagne);
+  const handleSave = async (campagne: Campagne) => {
+    try {
+      if (user) {
+        // Supabase
+        if (selectedCampagne) {
+          await updateCampagneSupabase(campagne);
+        } else {
+          await addCampagneSupabase(campagne);
+        }
+      } else {
+        // localStorage
+        if (selectedCampagne) {
+          updateCampagne(campagne);
+        } else {
+          addCampagne(campagne);
+        }
+      }
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
     }
-    loadData();
     setShowModal(false);
     setSelectedCampagne(null);
   };
 
-  const handleDelete = (id: string) => {
-    deleteCampagne(id);
-    loadData();
+  const handleDelete = async (id: string) => {
+    try {
+      if (user) {
+        await deleteCampagneSupabase(id);
+      } else {
+        deleteCampagne(id);
+      }
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
     setShowModal(false);
     setShowDetails(false);
     setSelectedCampagne(null);
@@ -256,7 +305,7 @@ export default function HomePage() {
     return Array.from(set).sort();
   }, [campagnes]);
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -269,18 +318,32 @@ export default function HomePage() {
       <Header onAjouter={handleAjouter} onDataChange={loadData} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Bannière mode local */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-amber-800">Mode local activé</h3>
-              <p className="text-sm text-amber-700 mt-1">
-                Les données sont stockées uniquement sur cet appareil. Utilisez les boutons d'export/import pour sauvegarder ou transférer vos données.
-              </p>
+        {/* Bannière mode */}
+        {user ? (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Cloud className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-green-800">Synchronisation activée</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  Vos données sont synchronisées sur tous vos appareils.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-amber-800">Mode local activé</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Les données sont stockées uniquement sur cet appareil. Connectez-vous pour synchroniser sur tous vos appareils.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Barre de recherche */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
