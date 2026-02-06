@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Rocket, Settings, Download, Upload, Plus } from 'lucide-react';
+import { Rocket, Settings, Download, Upload, Plus, LogIn, LogOut, User, Cloud, CloudOff } from 'lucide-react';
 import { exportData, importData } from '@/lib/storage';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from './AuthModal';
+import MigrationModal from './MigrationModal';
 
 interface HeaderProps {
   onAjouter?: () => void;
@@ -13,7 +16,11 @@ interface HeaderProps {
 
 export default function Header({ onAjouter, onDataChange }: HeaderProps) {
   const pathname = usePathname();
+  const { user, isConfigured, signOut, loading } = useAuth();
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showMigrationModal, setShowMigrationModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleExport = () => {
     const data = exportData();
@@ -44,6 +51,22 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    setShowUserMenu(false);
+    onDataChange?.();
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // Proposer la migration si l'utilisateur vient de se connecter
+    setShowMigrationModal(true);
+  };
+
+  const handleMigrationSuccess = () => {
+    onDataChange?.();
   };
 
   return (
@@ -83,6 +106,23 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
+              {/* Indicateur de mode */}
+              {!loading && (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-700">
+                  {user ? (
+                    <>
+                      <Cloud className="w-4 h-4 text-green-400" />
+                      <span className="text-xs text-green-400">Sync</span>
+                    </>
+                  ) : (
+                    <>
+                      <CloudOff className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs text-amber-400">Local</span>
+                    </>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handleExport}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
@@ -108,6 +148,63 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
               >
                 <Settings className="w-5 h-5" />
               </Link>
+
+              {/* Bouton utilisateur */}
+              {!loading && isConfigured && (
+                user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                      title={user.email || 'Compte'}
+                    >
+                      <User className="w-5 h-5" />
+                    </button>
+
+                    {showUserMenu && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowUserMenu(false)}
+                        />
+                        <div className="absolute right-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-slate-200 z-20 py-1">
+                          <div className="px-4 py-2 border-b border-slate-100">
+                            <p className="text-sm text-slate-500">Connecté en tant que</p>
+                            <p className="text-sm font-medium text-slate-800 truncate">{user.email}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setShowUserMenu(false);
+                              setShowMigrationModal(true);
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Migrer les données locales
+                          </button>
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            Se déconnecter
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="flex items-center gap-2 px-3 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                    title="Se connecter"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    <span className="text-sm font-medium hidden sm:inline">Connexion</span>
+                  </button>
+                )
+              )}
+
               {onAjouter && (
                 <button
                   onClick={onAjouter}
@@ -147,6 +244,22 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Auth */}
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {/* Modal Migration */}
+      {showMigrationModal && (
+        <MigrationModal
+          onClose={() => setShowMigrationModal(false)}
+          onSuccess={handleMigrationSuccess}
+        />
       )}
     </>
   );
