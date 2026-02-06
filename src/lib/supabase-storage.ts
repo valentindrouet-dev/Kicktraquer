@@ -10,29 +10,30 @@ function getSupabase() {
 }
 
 // Conversion des noms de champs (camelCase <-> snake_case)
+// Les chaînes vides sont converties en null pour les champs optionnels
 function toSnakeCase(campagne: Campagne): Record<string, unknown> {
   return {
     id: campagne.id,
     nom_jeu: campagne.nomJeu,
     editeur: campagne.editeur,
     plateforme: campagne.plateforme,
-    niveau_pledge: campagne.niveauPledge,
+    niveau_pledge: campagne.niveauPledge || '',
     prix_pledge: campagne.prixPledge,
     frais_port: campagne.fraisPort,
     frais_port_payes: campagne.fraisPortPayes,
     devise: campagne.devise,
     statut: campagne.statut,
-    langue: campagne.langue,
-    propriete: campagne.propriete,
-    financement_total: campagne.financementTotal,
-    mois_livraison: campagne.moisLivraison,
-    annee_livraison: campagne.anneeLivraison,
-    date_fin_campagne: campagne.dateFinCampagne,
-    image_url: campagne.imageUrl,
-    url_campagne: campagne.urlCampagne,
-    url_bgg: campagne.urlBGG,
-    id_engagement: campagne.idEngagement,
-    notes: campagne.notes,
+    langue: campagne.langue || null,
+    propriete: campagne.propriete || 'Perso',
+    financement_total: campagne.financementTotal || null,
+    mois_livraison: campagne.moisLivraison || null,
+    annee_livraison: campagne.anneeLivraison || null,
+    date_fin_campagne: campagne.dateFinCampagne || null,
+    image_url: campagne.imageUrl || null,
+    url_campagne: campagne.urlCampagne || null,
+    url_bgg: campagne.urlBGG || null,
+    id_engagement: campagne.idEngagement || null,
+    notes: campagne.notes || null,
     date_ajout: campagne.dateAjout,
   };
 }
