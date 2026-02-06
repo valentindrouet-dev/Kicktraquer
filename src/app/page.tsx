@@ -74,14 +74,16 @@ export default function HomePage() {
       setParametres(p);
     }
     setIsLoading(false);
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Recharger les données quand l'utilisateur change
   useEffect(() => {
     if (!authLoading) {
       loadData();
     }
-  }, [user, authLoading, loadData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   useEffect(() => {
     // Charger les préférences depuis localStorage

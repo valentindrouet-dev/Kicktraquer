@@ -50,13 +50,15 @@ export default function StatistiquesPage() {
       console.error('Erreur lors du chargement des données:', error);
     }
     setIsLoading(false);
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (!authLoading) {
       loadData();
     }
-  }, [authLoading, loadData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   // Campagnes filtrées
   const filteredCampagnes = useMemo(() => {
