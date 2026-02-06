@@ -112,10 +112,22 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
     }
   };
 
+  // Couleur de fond selon la propriété
+  const getBackgroundColor = (): string => {
+    switch (campagne.propriete) {
+      case 'BGG':
+        return '#EDE7BB';
+      case 'Perso':
+        return '#C4E3EB';
+      default:
+        return '#ffffff';
+    }
+  };
+
   return (
     <div
-      className={`bg-white overflow-hidden cursor-pointer card-hover border border-slate-200 group ${isMinimalMode ? 'rounded-lg' : 'rounded-xl shadow-sm'}`}
-      style={{ width: `${cardWidth}px` }}
+      className={`overflow-hidden cursor-pointer card-hover border border-slate-200 group ${isMinimalMode ? 'rounded-lg' : 'rounded-xl shadow-sm'}`}
+      style={{ width: `${cardWidth}px`, backgroundColor: getBackgroundColor() }}
       onClick={onClick}
       title={campagne.nomJeu}
     >

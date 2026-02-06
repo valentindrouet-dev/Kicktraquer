@@ -532,6 +532,7 @@ export default function HomePage() {
                 <option value="nomJeu">Nom</option>
                 <option value="editeur">Éditeur</option>
                 <option value="plateforme">Plateforme</option>
+                <option value="statut">Statut</option>
                 <option value="prixPledge">Prix</option>
                 <option value="dateAjout">Date d'ajout</option>
                 <option value="livraison">Livraison</option>
