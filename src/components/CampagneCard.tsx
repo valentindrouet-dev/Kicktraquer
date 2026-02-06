@@ -112,13 +112,13 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
     }
   };
 
-  // Couleur de fond selon la propriété
+  // Couleur de fond selon la propriété (couleurs très légères)
   const getBackgroundColor = (): string => {
     switch (campagne.propriete) {
       case 'BGG':
-        return '#EDE7BB';
+        return '#FAF9F3';  // Beige très clair
       case 'Perso':
-        return '#C4E3EB';
+        return '#F3F9FA';  // Bleu très clair
       default:
         return '#ffffff';
     }
