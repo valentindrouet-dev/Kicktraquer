@@ -649,7 +649,7 @@ export default function StatistiquesPage() {
                         <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                           <Truck className="w-4 h-4 text-white" />
                         </div>
-                        <span className="text-red-700">Frais de port non renseignés</span>
+                        <span className="text-red-700">Frais de port non réglés</span>
                       </div>
                       <span className="text-lg font-bold text-red-700">{stats.fraisPortNonRenseignes}</span>
                     </div>

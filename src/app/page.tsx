@@ -6,13 +6,19 @@ import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
 import CampagneDetails from '@/components/CampagneDetails';
-import CampagneTable from '@/components/CampagneTable';
+import CampagneTable, { SortField, ColumnConfig, DEFAULT_COLUMNS } from '@/components/CampagneTable';
 import CampagneTimeline from '@/components/CampagneTimeline';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 
-type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal';
 type SortOrder = 'asc' | 'desc';
+
+const STORAGE_KEYS = {
+  SORT_FIELD: 'kicktraquer_sortField',
+  SORT_ORDER: 'kicktraquer_sortOrder',
+  COLUMNS: 'kicktraquer_tableColumns',
+  VIEW_MODE: 'kicktraquer_viewMode',
+};
 
 export default function HomePage() {
   const [campagnes, setCampagnes] = useState<Campagne[]>([]);
@@ -29,6 +35,7 @@ export default function HomePage() {
   const [sortField, setSortField] = useState<SortField>('livraison');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
+  const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -46,7 +53,47 @@ export default function HomePage() {
 
   useEffect(() => {
     loadData();
+
+    // Charger les préférences depuis localStorage
+    const savedSortField = localStorage.getItem(STORAGE_KEYS.SORT_FIELD);
+    const savedSortOrder = localStorage.getItem(STORAGE_KEYS.SORT_ORDER);
+    const savedViewMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
+    const savedColumns = localStorage.getItem(STORAGE_KEYS.COLUMNS);
+
+    if (savedSortField) setSortField(savedSortField as SortField);
+    if (savedSortOrder) setSortOrder(savedSortOrder as SortOrder);
+    if (savedViewMode) setViewMode(savedViewMode as 'grid' | 'table' | 'timeline');
+    if (savedColumns) {
+      try {
+        const parsed = JSON.parse(savedColumns);
+        // Fusionner avec les colonnes par défaut pour gérer les nouvelles colonnes
+        const merged = DEFAULT_COLUMNS.map(defaultCol => {
+          const saved = parsed.find((c: ColumnConfig) => c.id === defaultCol.id);
+          return saved ? { ...defaultCol, visible: saved.visible } : defaultCol;
+        });
+        setTableColumns(merged);
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
   }, []);
+
+  // Sauvegarder les préférences dans localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SORT_FIELD, sortField);
+  }, [sortField]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SORT_ORDER, sortOrder);
+  }, [sortOrder]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.VIEW_MODE, viewMode);
+  }, [viewMode]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.COLUMNS, JSON.stringify(tableColumns));
+  }, [tableColumns]);
 
   // Filtrer et trier les campagnes
   const filteredCampagnes = useMemo(() => {
@@ -107,6 +154,27 @@ export default function HomePage() {
           const finA = a.financementTotal || 0;
           const finB = b.financementTotal || 0;
           comparison = finA - finB;
+          break;
+        case 'statut':
+          comparison = a.statut.localeCompare(b.statut);
+          break;
+        case 'niveauPledge':
+          const pledgeA = a.niveauPledge || '';
+          const pledgeB = b.niveauPledge || '';
+          comparison = pledgeA.localeCompare(pledgeB);
+          break;
+        case 'fraisPort':
+          comparison = (a.fraisPort || 0) - (b.fraisPort || 0);
+          break;
+        case 'totalPaye':
+          const payeA = a.paiements.reduce((sum, p) => sum + p.montant, 0);
+          const payeB = b.paiements.reduce((sum, p) => sum + p.montant, 0);
+          comparison = payeA - payeB;
+          break;
+        case 'propriete':
+          const propA = a.propriete || 'Perso';
+          const propB = b.propriete || 'Perso';
+          comparison = propA.localeCompare(propB);
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -448,6 +516,8 @@ export default function HomePage() {
                   setSortOrder('asc');
                 }
               }}
+              columns={tableColumns}
+              onColumnsChange={setTableColumns}
             />
           ) : (
             <CampagneTimeline

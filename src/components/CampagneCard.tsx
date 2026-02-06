@@ -3,8 +3,7 @@
 import Image from 'next/image';
 import { Campagne } from '@/types';
 import { ExternalLink, Pencil, Truck } from 'lucide-react';
-
-type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal';
+import { SortField } from './CampagneTable';
 
 interface CampagneCardProps {
   campagne: Campagne;
@@ -95,6 +94,16 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
         return campagne.langue || 'Non spécifiée';
       case 'financementTotal':
         return campagne.financementTotal ? `${formatNumber(campagne.financementTotal)} ${campagne.devise}` : 'Non renseigné';
+      case 'statut':
+        return campagne.statut;
+      case 'niveauPledge':
+        return campagne.niveauPledge || '-';
+      case 'fraisPort':
+        return campagne.fraisPort ? formatMontant(campagne.fraisPort, campagne.devise) : 'Non réglés';
+      case 'totalPaye':
+        return formatMontant(totalPaye, campagne.devise);
+      case 'propriete':
+        return campagne.propriete || 'Perso';
       default:
         return campagne.editeur;
     }
@@ -133,7 +142,7 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
             </span>
             {/* Icône frais de port non renseignés */}
             {(!campagne.fraisPort || campagne.fraisPort === 0) && (
-              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
                 <Truck className="w-3 h-3 text-white" />
               </div>
             )}
@@ -141,7 +150,7 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
         )}
         {/* Indicateur frais de port en mode mini */}
         {isMinimalMode && (!campagne.fraisPort || campagne.fraisPort === 0) && (
-          <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non renseignés">
+          <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
             <Truck className="w-2.5 h-2.5 text-white" />
           </div>
         )}
