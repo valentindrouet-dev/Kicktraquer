@@ -118,12 +118,17 @@ export async function getCampagnesSupabase(): Promise<Campagne[]> {
 export async function addCampagneSupabase(campagne: Campagne): Promise<boolean> {
   const sb = getSupabase();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return false;
+  if (!user) {
+    console.error('addCampagneSupabase: utilisateur non connecté');
+    throw new Error('Utilisateur non connecté');
+  }
 
   const campagneData = {
     ...toSnakeCase(campagne),
     user_id: user.id,
   };
+
+  console.log('Ajout campagne:', campagneData);
 
   const { data, error } = await sb
     .from('campagnes')
@@ -132,9 +137,11 @@ export async function addCampagneSupabase(campagne: Campagne): Promise<boolean> 
     .single();
 
   if (error) {
-    console.error('Erreur lors de l\'ajout de la campagne:', error);
-    return false;
+    console.error('Erreur Supabase:', error.message, error.details, error.hint, error.code);
+    throw new Error(`Erreur Supabase: ${error.message}`);
   }
+
+  console.log('Campagne ajoutée:', data);
 
   // Ajouter les paiements
   if (campagne.paiements.length > 0) {
@@ -170,7 +177,9 @@ export async function addCampagneSupabase(campagne: Campagne): Promise<boolean> 
 export async function updateCampagneSupabase(campagne: Campagne): Promise<boolean> {
   const sb = getSupabase();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return false;
+  if (!user) {
+    throw new Error('Utilisateur non connecté');
+  }
 
   const campagneData = toSnakeCase(campagne);
 
@@ -181,8 +190,8 @@ export async function updateCampagneSupabase(campagne: Campagne): Promise<boolea
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Erreur lors de la mise à jour de la campagne:', error);
-    return false;
+    console.error('Erreur Supabase update:', error.message, error.details, error.hint, error.code);
+    throw new Error(`Erreur Supabase: ${error.message}`);
   }
 
   // Supprimer et recréer les paiements

@@ -44,6 +44,7 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedCampagne, setSelectedCampagne] = useState<Campagne | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Charger les données (Supabase si connecté, sinon localStorage)
   const loadData = useCallback(async () => {
@@ -212,6 +213,7 @@ export default function HomePage() {
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
+    setSaveError(null);
     try {
       if (user) {
         // Supabase
@@ -229,11 +231,12 @@ export default function HomePage() {
         }
       }
       await loadData();
+      setShowModal(false);
+      setSelectedCampagne(null);
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      setSaveError('Erreur: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
     }
-    setShowModal(false);
-    setSelectedCampagne(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -620,6 +623,17 @@ export default function HomePage() {
         )}
       </main>
 
+      {/* Message d'erreur */}
+      {saveError && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[60] bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>{saveError}</span>
+          <button onClick={() => setSaveError(null)} className="ml-2 text-red-700 hover:text-red-900">
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Modal édition */}
       {showModal && (
         <CampagneModal
@@ -630,6 +644,7 @@ export default function HomePage() {
           onClose={() => {
             setShowModal(false);
             setSelectedCampagne(null);
+            setSaveError(null);
           }}
         />
       )}
