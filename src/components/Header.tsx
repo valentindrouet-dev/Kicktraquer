@@ -106,20 +106,47 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              {/* Indicateur de mode */}
+              {/* Indicateur de mode avec tooltip */}
               {!loading && (
-                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-700">
-                  {user ? (
-                    <>
-                      <Cloud className="w-4 h-4 text-green-400" />
-                      <span className="text-xs text-green-400">Sync</span>
-                    </>
-                  ) : (
-                    <>
-                      <CloudOff className="w-4 h-4 text-amber-400" />
-                      <span className="text-xs text-amber-400">Local</span>
-                    </>
-                  )}
+                <div className="relative group">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-700 cursor-help">
+                    {user ? (
+                      <>
+                        <Cloud className="w-4 h-4 text-green-400" />
+                        <span className="text-xs text-green-400">Sync</span>
+                      </>
+                    ) : (
+                      <>
+                        <CloudOff className="w-4 h-4 text-amber-400" />
+                        <span className="text-xs text-amber-400">Local</span>
+                      </>
+                    )}
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 p-3 bg-white rounded-lg shadow-lg border border-slate-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                    {user ? (
+                      <>
+                        <div className="flex items-center gap-2 text-green-600 font-medium mb-1">
+                          <Cloud className="w-4 h-4" />
+                          Synchronisation activée
+                        </div>
+                        <p className="text-xs text-slate-600">
+                          Vos données sont synchronisées sur tous vos appareils.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-amber-600 font-medium mb-1">
+                          <CloudOff className="w-4 h-4" />
+                          Mode local
+                        </div>
+                        <p className="text-xs text-slate-600">
+                          Données stockées uniquement sur cet appareil. Connectez-vous pour synchroniser.
+                        </p>
+                      </>
+                    )}
+                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-slate-200 transform rotate-45" />
+                  </div>
                 </div>
               )}
 

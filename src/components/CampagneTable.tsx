@@ -48,6 +48,18 @@ const MOIS_NOMS = [
   'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'
 ];
 
+// Couleur de fond selon la propriété
+function getBackgroundColor(propriete?: string): string {
+  switch (propriete) {
+    case 'BGG':
+      return '#F5F2E4';
+    case 'Perso':
+      return '#E6F3F5';
+    default:
+      return 'transparent';
+  }
+}
+
 function formatMontant(montant: number, devise: string): string {
   const symbols: Record<string, string> = {
     EUR: '€',
@@ -333,7 +345,8 @@ export default function CampagneTable({
             {campagnes.map((campagne) => (
               <tr
                 key={campagne.id}
-                className="hover:bg-slate-50 cursor-pointer transition-colors"
+                className="hover:brightness-95 cursor-pointer transition-all"
+                style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
                 onClick={() => onRowClick(campagne)}
               >
                 {visibleColumns.map(column => renderCell(campagne, column))}

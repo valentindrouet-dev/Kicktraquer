@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List, Calendar, Cloud } from 'lucide-react';
+import { Search, Filter, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertCircle, LayoutGrid, List, Calendar } from 'lucide-react';
 import Header from '@/components/Header';
 import CampagneCard from '@/components/CampagneCard';
 import CampagneModal from '@/components/CampagneModal';
@@ -321,33 +321,6 @@ export default function HomePage() {
       <Header onAjouter={handleAjouter} onDataChange={loadData} />
 
       <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Bannière mode */}
-        {user ? (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <Cloud className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-green-800">Synchronisation activée</h3>
-                <p className="text-sm text-green-700 mt-1">
-                  Vos données sont synchronisées sur tous vos appareils.
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-medium text-amber-800">Mode local activé</h3>
-                <p className="text-sm text-amber-700 mt-1">
-                  Les données sont stockées uniquement sur cet appareil. Connectez-vous pour synchroniser sur tous vos appareils.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Barre de recherche */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
           <div className="relative">

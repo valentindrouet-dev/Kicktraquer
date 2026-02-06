@@ -16,6 +16,18 @@ const MOIS = [
   'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'
 ];
 
+// Couleur de fond selon la propriété
+function getBackgroundColor(propriete?: string): string {
+  switch (propriete) {
+    case 'BGG':
+      return '#F5F2E4';
+    case 'Perso':
+      return '#E6F3F5';
+    default:
+      return '#ffffff';
+  }
+}
+
 export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }: CampagneTimelineProps) {
   // Date actuelle
   const today = new Date();
@@ -160,7 +172,10 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                             className="block relative group"
                             title={`${campagne.nomJeu} - ${MOIS[moisNum - 1]} ${annee}`}
                           >
-                            <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-slate-200 hover:border-primary-500 transition-colors bg-slate-100 shadow-sm">
+                            <div
+                              className="w-14 h-14 rounded-lg overflow-hidden border-2 border-slate-200 hover:border-primary-500 transition-colors shadow-sm"
+                              style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
+                            >
                               {campagne.imageUrl ? (
                                 <Image
                                   src={campagne.imageUrl}
@@ -209,7 +224,8 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                       <button
                         key={campagne.id}
                         onClick={() => onCampagneClick(campagne)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-slate-200 hover:border-primary-400 hover:bg-primary-50 transition-colors text-sm"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 hover:border-primary-400 hover:brightness-95 transition-all text-sm"
+                        style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
                       >
                         <span className="text-slate-400 text-xs">{MOIS[Number(mois) - 1]}</span>
                         <span className="font-medium text-slate-700">{campagne.nomJeu}</span>
@@ -243,7 +259,10 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                   onClick={() => onCampagneClick(campagne)}
                   className="group relative"
                 >
-                  <div className="w-14 h-14 rounded-lg overflow-hidden border-2 border-slate-200 hover:border-primary-500 transition-colors bg-slate-100 shadow-sm">
+                  <div
+                    className="w-14 h-14 rounded-lg overflow-hidden border-2 border-slate-200 hover:border-primary-500 transition-colors shadow-sm"
+                    style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
+                  >
                     {campagne.imageUrl ? (
                       <Image
                         src={campagne.imageUrl}
