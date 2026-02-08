@@ -68,7 +68,7 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
   const annees = useMemo(() => {
     return Object.keys(campagnesParAnneeEtMois)
       .map(Number)
-      .sort((a, b) => a - b);
+      .sort((a, b) => b - a);  // Du plus récent au plus ancien
   }, [campagnesParAnneeEtMois]);
 
   // Campagnes sans date de livraison
