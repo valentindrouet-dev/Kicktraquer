@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import { Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getParametres, saveParametres } from '@/lib/storage';
+import { getParametresSupabase, saveParametresSupabase } from '@/lib/supabase-storage';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Trash2, RotateCcw, Save, GripVertical } from 'lucide-react';
 
 type ParametreKey = keyof Parametres;
@@ -114,33 +116,65 @@ function ListEditor({ title, items, onChange }: ListEditorProps) {
 }
 
 export default function ParametresPage() {
+  const { user, loading: authLoading } = useAuth();
   const [parametres, setParametres] = useState<Parametres>(PARAMETRES_DEFAUT);
   const [isLoading, setIsLoading] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
 
-  useEffect(() => {
-    const p = getParametres();
-    setParametres(p);
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (user) {
+        const p = await getParametresSupabase();
+        setParametres(p);
+      } else {
+        const p = getParametres();
+        setParametres(p);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des paramètres:', error);
+    }
     setIsLoading(false);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   const handleChange = (key: ParametreKey, value: string[]) => {
     setParametres({ ...parametres, [key]: value });
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    saveParametres(parametres);
-    setHasChanges(false);
-    setSavedMessage(true);
-    setTimeout(() => setSavedMessage(false), 2000);
+  const handleSave = async () => {
+    try {
+      if (user) {
+        await saveParametresSupabase(parametres);
+      } else {
+        saveParametres(parametres);
+      }
+      setHasChanges(false);
+      setSavedMessage(true);
+      setTimeout(() => setSavedMessage(false), 2000);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde des paramètres');
+    }
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres par défaut ?')) {
       setParametres(PARAMETRES_DEFAUT);
-      saveParametres(PARAMETRES_DEFAUT);
+      if (user) {
+        await saveParametresSupabase(PARAMETRES_DEFAUT);
+      } else {
+        saveParametres(PARAMETRES_DEFAUT);
+      }
       setHasChanges(false);
     }
   };
