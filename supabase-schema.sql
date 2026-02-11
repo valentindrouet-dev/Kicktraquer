@@ -17,6 +17,7 @@ CREATE TABLE campagnes (
   langue TEXT,
   propriete TEXT DEFAULT 'Perso',
   financement_total DECIMAL(12,2),
+  nombre_figurines INTEGER,
   mois_livraison INTEGER,
   annee_livraison INTEGER,
   date_fin_campagne DATE,

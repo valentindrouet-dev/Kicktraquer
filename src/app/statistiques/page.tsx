@@ -121,6 +121,8 @@ export default function StatistiquesPage() {
     let totalAddons = 0;
     let totalPaye = 0;
     let totalFinancementGlobal = 0;
+    let totalFigurines = 0;
+    let campagnesAvecFigurines = 0;
     let fraisPortNonRenseignes = 0;
 
     filteredCampagnes.forEach((c) => {
@@ -148,6 +150,12 @@ export default function StatistiquesPage() {
       // Frais de port non renseignés
       if (!c.fraisPort || c.fraisPort === 0) {
         fraisPortNonRenseignes++;
+      }
+
+      // Figurines
+      if (c.nombreFigurines && c.nombreFigurines > 0) {
+        totalFigurines += c.nombreFigurines;
+        campagnesAvecFigurines++;
       }
 
       // Paiements par année
@@ -222,6 +230,8 @@ export default function StatistiquesPage() {
       parLangue,
       topEditeurs,
       totalFinancementGlobal,
+      totalFigurines,
+      campagnesAvecFigurines,
       fraisPortNonRenseignes,
       livrees,
       enAttente,
@@ -547,6 +557,28 @@ export default function StatistiquesPage() {
                   </p>
                 </div>
               </div>
+              {stats && stats.totalFigurines > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-slate-200">
+                  <div>
+                    <p className="text-sm text-slate-500">Total figurines</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {stats.totalFigurines.toLocaleString('fr-FR')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Campagnes avec figurines</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {stats.campagnesAvecFigurines}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Moyenne figurines/campagne</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {Math.round(stats.totalFigurines / stats.campagnesAvecFigurines)}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Paiements par année */}

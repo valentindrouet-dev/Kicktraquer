@@ -206,6 +206,9 @@ export default function HomePage() {
           const propB = b.propriete || 'Perso';
           comparison = propA.localeCompare(propB);
           break;
+        case 'nombreFigurines':
+          comparison = (a.nombreFigurines || 0) - (b.nombreFigurines || 0);
+          break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -513,6 +516,7 @@ export default function HomePage() {
                 <option value="livraison">Livraison</option>
                 <option value="langue">Langue</option>
                 <option value="financementTotal">Financement Total</option>
+                <option value="nombreFigurines">Nombre de figurines</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}

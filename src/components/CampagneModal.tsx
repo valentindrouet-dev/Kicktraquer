@@ -41,6 +41,7 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   langue: '',
   propriete: 'Perso',
   financementTotal: undefined,
+  nombreFigurines: undefined,
   paiements: [],
   addons: [],
   moisLivraison: undefined,
@@ -332,6 +333,20 @@ export default function CampagneModal({
                 onChange={(e) => setFormData({ ...formData, financementTotal: e.target.value ? parseFloat(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="Ex: 500000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Nombre de figurines
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={formData.nombreFigurines || ''}
+                onChange={(e) => setFormData({ ...formData, nombreFigurines: e.target.value ? parseInt(e.target.value) : undefined })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Ex: 50"
               />
             </div>
           </div>

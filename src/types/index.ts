@@ -28,6 +28,7 @@ export interface Campagne {
   langue?: string;           // Langue du pledge de base
   propriete?: string;        // BGG ou Perso
   financementTotal?: number; // Financement total du jeu (objectif atteint)
+  nombreFigurines?: number;  // Nombre de figurines dans le jeu
   paiements: Paiement[];
   addons: Addon[];
   moisLivraison?: number;  // 1-12
