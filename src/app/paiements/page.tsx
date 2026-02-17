@@ -271,7 +271,7 @@ export default function PaiementsPage() {
                       <td className="py-3 px-4 text-sm font-medium">
                         <button
                           onClick={() => handleCampagneClick(p.campagneId)}
-                          className="text-primary-600 hover:text-primary-800 hover:underline text-left"
+                          className="text-slate-800 hover:underline text-left"
                         >
                           {p.campagneNom}
                         </button>
