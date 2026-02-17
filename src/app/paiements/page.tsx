@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
-import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
-import { getCampagnes, getParametres } from '@/lib/storage';
-import { getCampagnesSupabase, getParametresSupabase } from '@/lib/supabase-storage';
+import CampagneDetails from '@/components/CampagneDetails';
+import { Campagne } from '@/types';
+import { getCampagnes } from '@/lib/storage';
+import { getCampagnesSupabase } from '@/lib/supabase-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChevronUp, ChevronDown, ChevronsUpDown, CreditCard } from 'lucide-react';
 
@@ -52,6 +53,8 @@ export default function PaiementsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [sortField, setSortField] = useState<PaiementSortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [selectedCampagne, setSelectedCampagne] = useState<Campagne | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -139,6 +142,14 @@ export default function PaiementsPage() {
     } else {
       setSortField(field);
       setSortOrder('asc');
+    }
+  };
+
+  const handleCampagneClick = (campagneId: string) => {
+    const campagne = campagnes.find(c => c.id === campagneId);
+    if (campagne) {
+      setSelectedCampagne(campagne);
+      setShowDetails(true);
     }
   };
 
@@ -257,8 +268,13 @@ export default function PaiementsPage() {
                       <td className="py-3 px-4 text-sm text-slate-700">
                         {p.date ? new Date(p.date).toLocaleDateString('fr-FR') : '-'}
                       </td>
-                      <td className="py-3 px-4 text-sm font-medium text-slate-800">
-                        {p.campagneNom}
+                      <td className="py-3 px-4 text-sm font-medium">
+                        <button
+                          onClick={() => handleCampagneClick(p.campagneId)}
+                          className="text-primary-600 hover:text-primary-800 hover:underline text-left"
+                        >
+                          {p.campagneNom}
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-sm text-slate-700 text-right font-medium">
                         {formatMontant(p.montant, p.devise)}
@@ -277,6 +293,22 @@ export default function PaiementsPage() {
           </div>
         )}
       </main>
+
+      {/* Modal détails campagne */}
+      {showDetails && selectedCampagne && (
+        <CampagneDetails
+          campagne={selectedCampagne}
+          onClose={() => {
+            setShowDetails(false);
+            setSelectedCampagne(null);
+          }}
+          onEdit={() => {}}
+          onPrevious={undefined}
+          onNext={undefined}
+          hasPrevious={false}
+          hasNext={false}
+        />
+      )}
     </div>
   );
 }
