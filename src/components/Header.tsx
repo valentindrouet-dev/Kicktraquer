@@ -93,6 +93,16 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
                 Campagnes
               </Link>
               <Link
+                href="/paiements"
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  pathname === '/paiements'
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                Paiements
+              </Link>
+              <Link
                 href="/statistiques"
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   pathname === '/statistiques'
