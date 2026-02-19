@@ -221,6 +221,11 @@ export default function HomePage() {
         case 'nombreFigurines':
           comparison = (a.nombreFigurines || 0) - (b.nombreFigurines || 0);
           break;
+        case 'dateFinCampagne':
+          const finCampA = a.dateFinCampagne || '';
+          const finCampB = b.dateFinCampagne || '';
+          comparison = finCampA.localeCompare(finCampB);
+          break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -529,6 +534,7 @@ export default function HomePage() {
                 <option value="langue">Langue</option>
                 <option value="financementTotal">Financement Total</option>
                 <option value="nombreFigurines">Nombre de figurines</option>
+                <option value="dateFinCampagne">Date de fin de campagne</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Campagne } from '@/types';
 import { Pencil, ExternalLink, Truck, ChevronUp, ChevronDown, ChevronsUpDown, Settings2, Check } from 'lucide-react';
 
-export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines';
+export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines' | 'dateFinCampagne';
 type SortOrder = 'asc' | 'desc';
 
 export interface ColumnConfig {
