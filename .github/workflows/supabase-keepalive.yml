@@ -1,0 +1,45 @@
+name: Supabase Keep-Alive
+
+# Exécuter tous les 4 jours (sous le seuil de 7 jours de Supabase)
+on:
+  schedule:
+    # A 10h00 UTC tous les 4 jours (le 1, 5, 9, 13, 17, 21, 25, 29 de chaque mois)
+    - cron: '0 10 1,5,9,13,17,21,25,29 * *'
+  # Permet de lancer manuellement depuis l'interface GitHub
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase via API
+        run: |
+          echo "Sending keep-alive ping to Kicktraquer..."
+
+          # Remplacer par l'URL de votre app déployée
+          APP_URL="${{ secrets.APP_URL }}"
+
+          if [ -z "$APP_URL" ]; then
+            echo "ERROR: APP_URL secret is not set!"
+            echo "Please add your deployed app URL as a secret named APP_URL"
+            echo "Example: https://kicktraquer.vercel.app"
+            exit 1
+          fi
+
+          response=$(curl -s -w "\n%{http_code}" "$APP_URL/api/keepalive")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "Keep-alive ping successful!"
+          else
+            echo "Keep-alive ping failed with status $http_code"
+            exit 1
+          fi
+
+      - name: Log timestamp
+        run: |
+          echo "Keep-alive completed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

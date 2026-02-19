@@ -11,6 +11,7 @@ import CampagneTimeline from '@/components/CampagneTimeline';
 import { Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { getCampagnes, getParametres, addCampagne, updateCampagne, deleteCampagne } from '@/lib/storage';
 import { getCampagnesSupabase, getParametresSupabase, addCampagneSupabase, updateCampagneSupabase, deleteCampagneSupabase } from '@/lib/supabase-storage';
+import { performKeepAliveIfNeeded, startKeepAliveInterval } from '@/lib/supabase-keepalive';
 import { useAuth } from '@/contexts/AuthContext';
 
 type SortOrder = 'asc' | 'desc';
@@ -108,6 +109,17 @@ export default function HomePage() {
       }
     }
   }, []);
+
+  // Keep-alive Supabase : empêche le projet d'être mis en pause
+  useEffect(() => {
+    if (user) {
+      // Ping au chargement si nécessaire
+      performKeepAliveIfNeeded();
+      // Re-vérifier toutes les 24h si l'app reste ouverte
+      const stopInterval = startKeepAliveInterval();
+      return stopInterval;
+    }
+  }, [user]);
 
   // Sauvegarder les préférences dans localStorage
   useEffect(() => {
