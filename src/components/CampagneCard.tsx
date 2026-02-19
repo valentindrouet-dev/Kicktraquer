@@ -107,6 +107,10 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
         return formatMontant(totalPaye, campagne.devise);
       case 'propriete':
         return campagne.propriete || 'Perso';
+      case 'nombreFigurines':
+        return campagne.nombreFigurines ? `${campagne.nombreFigurines} figurines` : 'Non renseigné';
+      case 'dateFinCampagne':
+        return campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).toLocaleDateString('fr-FR') : 'Non renseignée';
       default:
         return campagne.editeur;
     }
