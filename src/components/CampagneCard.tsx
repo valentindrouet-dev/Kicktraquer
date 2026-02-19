@@ -110,7 +110,7 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
       case 'nombreFigurines':
         return campagne.nombreFigurines ? `${campagne.nombreFigurines} figurines` : 'Non renseigné';
       case 'dateFinCampagne':
-        return campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).toLocaleDateString('fr-FR') : 'Non renseignée';
+        return campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Non renseignée';
       default:
         return campagne.editeur;
     }
