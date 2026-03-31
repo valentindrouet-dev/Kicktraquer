@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
-import { Campagne, Paiement, Addon, Parametres } from '@/types';
+import { Campagne, Paiement, Addon, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const MOIS = [
@@ -219,7 +219,7 @@ export default function CampagneModal({
                 onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
-                {parametres.statuts.map((s) => (
+                {[...new Set([...parametres.statuts, ...PARAMETRES_DEFAUT.statuts])].map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
