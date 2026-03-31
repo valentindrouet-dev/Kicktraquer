@@ -40,6 +40,7 @@ export interface Campagne {
   idEngagement?: string;   // ID de l'engagement/pledge
   notes?: string;
   dateAjout: string;
+  dejaJoue?: boolean;      // Le jeu a-t-il déjà été joué ?
 }
 
 export interface Parametres {

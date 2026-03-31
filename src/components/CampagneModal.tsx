@@ -52,6 +52,7 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   urlBGG: '',
   idEngagement: '',
   notes: '',
+  dejaJoue: false,
 };
 
 export default function CampagneModal({
@@ -614,6 +615,19 @@ export default function CampagneModal({
               rows={3}
               placeholder="Remarques, détails du pledge..."
             />
+          </div>
+
+          {/* Déjà Joué */}
+          <div className="flex items-center">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.dejaJoue || false}
+                onChange={(e) => setFormData({ ...formData, dejaJoue: e.target.checked })}
+                className="w-5 h-5 text-green-600 rounded border-slate-300 focus:ring-green-500"
+              />
+              <span className="text-sm font-medium text-slate-700">Déjà joué</span>
+            </label>
           </div>
         </form>
 

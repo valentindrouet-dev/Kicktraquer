@@ -41,6 +41,7 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
   const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showRevendus, setShowRevendus] = useState(false);
+  const [showNonJouesOnly, setShowNonJouesOnly] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -148,6 +149,11 @@ export default function HomePage() {
       result = result.filter((c) => c.statut !== 'Revendu');
     }
 
+    // Filtre Non Joués uniquement
+    if (showNonJouesOnly) {
+      result = result.filter((c) => !c.dejaJoue);
+    }
+
     // Recherche
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -237,7 +243,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly]);
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
@@ -296,6 +302,20 @@ export default function HomePage() {
   const handleEditFromDetails = () => {
     setShowDetails(false);
     setShowModal(true);
+  };
+
+  const handleToggleDejaJoue = async (updatedCampagne: Campagne) => {
+    try {
+      if (user) {
+        await updateCampagneSupabase(updatedCampagne);
+      } else {
+        updateCampagne(updatedCampagne);
+      }
+      setSelectedCampagne(updatedCampagne);
+      await loadData();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+    }
   };
 
   // Navigation entre campagnes
@@ -505,6 +525,17 @@ export default function HomePage() {
               <span>Afficher Revendus</span>
             </label>
 
+            {/* Toggle Non Joués */}
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showNonJouesOnly}
+                onChange={(e) => setShowNonJouesOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-green-500 focus:ring-green-500"
+              />
+              <span>Non joués</span>
+            </label>
+
             {/* Contrôle de taille */}
             <div className={`flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 ${viewMode !== 'grid' ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
@@ -673,6 +704,7 @@ export default function HomePage() {
             setSelectedCampagne(null);
           }}
           onEdit={handleEditFromDetails}
+          onToggleDejaJoue={handleToggleDejaJoue}
           onPrevious={handlePreviousCampagne}
           onNext={handleNextCampagne}
           hasPrevious={currentIndex > 0}

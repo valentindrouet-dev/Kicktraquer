@@ -9,6 +9,7 @@ interface CampagneDetailsProps {
   campagne: Campagne;
   onClose: () => void;
   onEdit: () => void;
+  onToggleDejaJoue?: (campagne: Campagne) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   hasPrevious?: boolean;
@@ -60,12 +61,14 @@ function getStatutColor(statut: string): string {
     case 'remboursé':
     case 'rembourse':
       return 'bg-gray-100 text-gray-800';
+    case 'revendu':
+      return 'bg-orange-100 text-orange-800';
     default:
       return 'bg-slate-100 text-slate-800';
   }
 }
 
-export default function CampagneDetails({ campagne, onClose, onEdit, onPrevious, onNext, hasPrevious, hasNext }: CampagneDetailsProps) {
+export default function CampagneDetails({ campagne, onClose, onEdit, onToggleDejaJoue, onPrevious, onNext, hasPrevious, hasNext }: CampagneDetailsProps) {
   // Navigation au clavier
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft' && hasPrevious && onPrevious) {
@@ -150,11 +153,22 @@ export default function CampagneDetails({ campagne, onClose, onEdit, onPrevious,
             </button>
           </div>
 
-          {/* Badge statut */}
-          <div className="absolute bottom-4 left-4">
+          {/* Badge statut et Déjà Joué */}
+          <div className="absolute bottom-4 left-4 flex items-center gap-3">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatutColor(campagne.statut)}`}>
               {campagne.statut}
             </span>
+            {onToggleDejaJoue && (
+              <label className="flex items-center gap-2 px-3 py-1 bg-white/90 rounded-full cursor-pointer hover:bg-white transition-colors">
+                <input
+                  type="checkbox"
+                  checked={campagne.dejaJoue || false}
+                  onChange={() => onToggleDejaJoue({ ...campagne, dejaJoue: !campagne.dejaJoue })}
+                  className="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500"
+                />
+                <span className="text-sm font-medium text-slate-700">Déjà joué</span>
+              </label>
+            )}
           </div>
 
           {/* Titre sur l'image */}
