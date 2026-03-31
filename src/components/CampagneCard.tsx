@@ -40,6 +40,8 @@ function getStatutBadgeClass(statut: string): string {
     case 'remboursé':
     case 'rembourse':
       return 'badge-rembourse';
+    case 'revendu':
+      return 'badge-revendu';
     default:
       return 'bg-slate-100 text-slate-800';
   }

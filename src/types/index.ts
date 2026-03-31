@@ -73,7 +73,8 @@ export const PARAMETRES_DEFAUT: Parametres = {
     'Expédié',
     'Livré',
     'Annulé',
-    'Remboursé'
+    'Remboursé',
+    'Revendu'
   ],
   devises: ['EUR', 'USD', 'GBP', 'CAD', 'AUD'],
   typesPaiement: [

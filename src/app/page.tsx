@@ -40,6 +40,7 @@ export default function HomePage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
   const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
+  const [showRevendus, setShowRevendus] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -142,6 +143,11 @@ export default function HomePage() {
   const filteredCampagnes = useMemo(() => {
     let result = [...campagnes];
 
+    // Filtre Revendus (masqués par défaut)
+    if (!showRevendus) {
+      result = result.filter((c) => c.statut !== 'Revendu');
+    }
+
     // Recherche
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -231,7 +237,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus]);
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
@@ -487,6 +493,17 @@ export default function HomePage() {
                 <Calendar className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Toggle Revendus */}
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showRevendus}
+                onChange={(e) => setShowRevendus(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+              />
+              <span>Afficher Revendus</span>
+            </label>
 
             {/* Contrôle de taille */}
             <div className={`flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1 ${viewMode !== 'grid' ? 'opacity-50 pointer-events-none' : ''}`}>

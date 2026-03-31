@@ -95,6 +95,8 @@ function getStatutColor(statut: string): string {
     case 'remboursé':
     case 'rembourse':
       return 'bg-gray-100 text-gray-800';
+    case 'revendu':
+      return 'bg-orange-100 text-orange-800';
     default:
       return 'bg-slate-100 text-slate-800';
   }
