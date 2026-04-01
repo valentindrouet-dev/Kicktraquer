@@ -36,8 +36,7 @@ function toSnakeCase(campagne: Campagne): Record<string, unknown> {
     id_engagement: campagne.idEngagement || null,
     notes: campagne.notes || null,
     date_ajout: campagne.dateAjout,
-    // Note: deja_joue nécessite d'ajouter la colonne dans Supabase:
-    // ALTER TABLE campagnes ADD COLUMN deja_joue BOOLEAN DEFAULT false;
+    deja_joue: campagne.dejaJoue || false,
   };
 }
 
@@ -66,7 +65,7 @@ function toCamelCase(row: Record<string, unknown>): Campagne {
     idEngagement: row.id_engagement as string,
     notes: row.notes as string,
     dateAjout: row.date_ajout as string,
-    // dejaJoue: row.deja_joue as boolean, // Activer après avoir ajouté la colonne
+    dejaJoue: row.deja_joue as boolean,
     paiements: [],
     addons: [],
   };
