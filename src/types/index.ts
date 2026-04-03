@@ -14,6 +14,17 @@ export interface Addon {
   langue?: string;  // Langue de l'add-on
 }
 
+// Jeu à venir (watchlist simplifiée)
+export interface JeuAVenir {
+  id: string;
+  nomJeu: string;
+  editeur: string;
+  dateDebut?: string;      // Date de début de campagne prévue
+  urlCampagne?: string;
+  imageUrl?: string;
+  dateAjout: string;
+}
+
 export interface Campagne {
   id: string;
   nomJeu: string;
@@ -68,7 +79,6 @@ export const PARAMETRES_DEFAUT: Parametres = {
     'Autre'
   ],
   statuts: [
-    'À venir',
     'En cours',
     'Financé',
     'En production',

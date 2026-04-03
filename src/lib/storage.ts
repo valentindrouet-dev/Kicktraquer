@@ -1,4 +1,4 @@
-import { AppData, Campagne, Parametres, PARAMETRES_DEFAUT } from '@/types';
+import { AppData, Campagne, Parametres, PARAMETRES_DEFAUT, JeuAVenir } from '@/types';
 
 const STORAGE_KEY = 'kicktraquer-data';
 
@@ -87,4 +87,44 @@ export function importData(jsonString: string): boolean {
   } catch {
     return false;
   }
+}
+
+// ========== Jeux À Venir (watchlist) ==========
+
+const AVENIR_STORAGE_KEY = 'kicktraquer-avenir';
+
+export function getJeuxAVenir(): JeuAVenir[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(AVENIR_STORAGE_KEY);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored) as JeuAVenir[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveJeuxAVenir(jeux: JeuAVenir[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(AVENIR_STORAGE_KEY, JSON.stringify(jeux));
+}
+
+export function addJeuAVenir(jeu: JeuAVenir): void {
+  const jeux = getJeuxAVenir();
+  jeux.push(jeu);
+  saveJeuxAVenir(jeux);
+}
+
+export function updateJeuAVenir(jeu: JeuAVenir): void {
+  const jeux = getJeuxAVenir();
+  const index = jeux.findIndex(j => j.id === jeu.id);
+  if (index !== -1) {
+    jeux[index] = jeu;
+    saveJeuxAVenir(jeux);
+  }
+}
+
+export function deleteJeuAVenir(id: string): void {
+  const jeux = getJeuxAVenir();
+  saveJeuxAVenir(jeux.filter(j => j.id !== id));
 }
