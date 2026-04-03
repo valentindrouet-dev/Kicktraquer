@@ -162,7 +162,7 @@ export default function AVenirPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {jeux.map((jeu) => {
               const daysUntil = getDaysUntil(jeu);
               return (
@@ -170,8 +170,8 @@ export default function AVenirPage() {
                   key={jeu.id}
                   className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
                 >
-                  {/* Image */}
-                  <div className="relative h-32 bg-gradient-to-br from-cyan-50 to-cyan-100">
+                  {/* Image carrée */}
+                  <div className="relative aspect-square bg-gradient-to-br from-cyan-50 to-cyan-100">
                     {jeu.imageUrl ? (
                       <Image
                         src={jeu.imageUrl}
@@ -185,7 +185,7 @@ export default function AVenirPage() {
                       </div>
                     )}
                     {/* Badge countdown ou année */}
-                    <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                       daysUntil !== null ? (
                         daysUntil <= 0 ? 'bg-green-500 text-white' :
                         daysUntil <= 7 ? 'bg-orange-500 text-white' :
@@ -202,50 +202,46 @@ export default function AVenirPage() {
                       )}
                     </div>
                     {/* Actions */}
-                    <div className="absolute top-2 right-2 flex gap-1">
+                    <div className="absolute top-1.5 right-1.5 flex gap-1">
                       {jeu.urlCampagne && (
                         <a
                           href={jeu.urlCampagne}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                          className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <ExternalLink className="w-3.5 h-3.5 text-slate-600" />
+                          <ExternalLink className="w-3 h-3 text-slate-600" />
                         </a>
                       )}
                       <button
                         onClick={() => handleOpenModal(jeu)}
-                        className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                        className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"
                       >
-                        <Pencil className="w-3.5 h-3.5 text-slate-600" />
+                        <Pencil className="w-3 h-3 text-slate-600" />
                       </button>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-3">
-                    <h3 className="font-semibold text-slate-800 truncate text-sm" title={jeu.nomJeu}>
+                  <div className="p-2">
+                    <h3 className="font-semibold text-slate-800 truncate text-xs" title={jeu.nomJeu}>
                       {jeu.nomJeu}
                     </h3>
-                    <p className="text-xs text-slate-500 truncate">{jeu.editeur || 'Éditeur inconnu'}</p>
-
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{formatDate(jeu)}</span>
-                      </div>
+                    <p className="text-xs text-slate-500 truncate">{jeu.editeur || '-'}</p>
+                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100">
+                      <span className="text-xs text-slate-500">{formatDate(jeu)}</span>
                       {showDeleteConfirm === jeu.id ? (
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleDelete(jeu.id)}
-                            className="px-2 py-0.5 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                            className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                           >
                             Oui
                           </button>
                           <button
                             onClick={() => setShowDeleteConfirm(null)}
-                            className="px-2 py-0.5 bg-slate-200 text-slate-700 text-xs rounded hover:bg-slate-300"
+                            className="px-1.5 py-0.5 bg-slate-200 text-slate-700 text-xs rounded hover:bg-slate-300"
                           >
                             Non
                           </button>
@@ -253,10 +249,9 @@ export default function AVenirPage() {
                       ) : (
                         <button
                           onClick={() => setShowDeleteConfirm(jeu.id)}
-                          className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                          className="p-0.5 text-slate-400 hover:text-red-500 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <Trash2 className="w-3 h-3" />
                       )}
                     </div>
                   </div>
