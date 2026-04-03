@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Header from '@/components/Header';
 import { JeuAVenir } from '@/types';
 import { getJeuxAVenir, addJeuAVenir, updateJeuAVenir, deleteJeuAVenir } from '@/lib/storage';
-import { Plus, X, Pencil, Trash2, ExternalLink, Calendar } from 'lucide-react';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AVenirPage() {
@@ -165,97 +165,93 @@ export default function AVenirPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {jeux.map((jeu) => {
               const daysUntil = getDaysUntil(jeu);
+              const CardWrapper = jeu.urlCampagne ? 'a' : 'div';
+              const cardProps = jeu.urlCampagne ? {
+                href: jeu.urlCampagne,
+                target: '_blank',
+                rel: 'noopener noreferrer',
+              } : {};
+
               return (
-                <div
+                <CardWrapper
                   key={jeu.id}
-                  className="bg-white rounded-lg border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
+                  {...cardProps}
+                  className="relative aspect-square bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
                 >
-                  {/* Image carrée */}
-                  <div className="relative aspect-square bg-gradient-to-br from-cyan-50 to-cyan-100">
-                    {jeu.imageUrl ? (
-                      <Image
-                        src={jeu.imageUrl}
-                        alt={jeu.nomJeu}
-                        fill
-                        className="object-cover"
-                      />
+                  {/* Image de fond */}
+                  {jeu.imageUrl ? (
+                    <Image
+                      src={jeu.imageUrl}
+                      alt={jeu.nomJeu}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-5xl">🎲</span>
+                    </div>
+                  )}
+
+                  {/* Badge countdown ou année */}
+                  <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                    daysUntil !== null ? (
+                      daysUntil <= 0 ? 'bg-green-500 text-white' :
+                      daysUntil <= 7 ? 'bg-orange-500 text-white' :
+                      daysUntil <= 30 ? 'bg-yellow-500 text-white' :
+                      'bg-cyan-500 text-white'
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl">🎲</span>
-                      </div>
+                      jeu.anneePrevue ? 'bg-slate-500 text-white' : 'bg-slate-300 text-slate-700'
+                    )
+                  }`}>
+                    {daysUntil !== null ? (
+                      daysUntil <= 0 ? 'Maintenant !' : daysUntil === 1 ? 'Demain' : `J-${daysUntil}`
+                    ) : (
+                      jeu.anneePrevue ? jeu.anneePrevue : '?'
                     )}
-                    {/* Badge countdown ou année */}
-                    <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                      daysUntil !== null ? (
-                        daysUntil <= 0 ? 'bg-green-500 text-white' :
-                        daysUntil <= 7 ? 'bg-orange-500 text-white' :
-                        daysUntil <= 30 ? 'bg-yellow-500 text-white' :
-                        'bg-cyan-500 text-white'
-                      ) : (
-                        jeu.anneePrevue ? 'bg-slate-500 text-white' : 'bg-slate-300 text-slate-700'
-                      )
-                    }`}>
-                      {daysUntil !== null ? (
-                        daysUntil <= 0 ? 'Maintenant !' : daysUntil === 1 ? 'Demain' : `J-${daysUntil}`
-                      ) : (
-                        jeu.anneePrevue ? jeu.anneePrevue : '?'
-                      )}
-                    </div>
-                    {/* Actions */}
-                    <div className="absolute top-1.5 right-1.5 flex gap-1">
-                      {jeu.urlCampagne && (
-                        <a
-                          href={jeu.urlCampagne}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <ExternalLink className="w-3 h-3 text-slate-600" />
-                        </a>
-                      )}
-                      <button
-                        onClick={() => handleOpenModal(jeu)}
-                        className="p-1 bg-white/90 rounded-full hover:bg-white transition-colors"
-                      >
-                        <Pencil className="w-3 h-3 text-slate-600" />
-                      </button>
-                    </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-2">
-                    <h3 className="font-semibold text-slate-800 truncate text-xs" title={jeu.nomJeu}>
+                  {/* Actions en haut à droite */}
+                  <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenModal(jeu); }}
+                      className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                    >
+                      <Pencil className="w-3 h-3 text-slate-600" />
+                    </button>
+                    {showDeleteConfirm === jeu.id ? (
+                      <div className="flex items-center gap-1 bg-white/90 rounded-full px-1">
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(jeu.id); }}
+                          className="px-1.5 py-0.5 bg-red-600 text-white text-[10px] rounded hover:bg-red-700"
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDeleteConfirm(null); }}
+                          className="px-1.5 py-0.5 bg-slate-200 text-slate-700 text-[10px] rounded hover:bg-slate-300"
+                        >
+                          Non
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDeleteConfirm(jeu.id); }}
+                        className="p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3 text-slate-600" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Infos en bas avec gradient */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2 pt-6">
+                    <h3 className="font-semibold text-white truncate text-xs" title={jeu.nomJeu}>
                       {jeu.nomJeu}
                     </h3>
-                    <p className="text-xs text-slate-500 truncate">{jeu.editeur || '-'}</p>
-                    <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-slate-100">
-                      <span className="text-xs text-slate-500">{formatDate(jeu)}</span>
-                      {showDeleteConfirm === jeu.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleDelete(jeu.id)}
-                            className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                          >
-                            Oui
-                          </button>
-                          <button
-                            onClick={() => setShowDeleteConfirm(null)}
-                            className="px-1.5 py-0.5 bg-slate-200 text-slate-700 text-xs rounded hover:bg-slate-300"
-                          >
-                            Non
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setShowDeleteConfirm(jeu.id)}
-                          className="p-0.5 text-slate-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                      )}
-                    </div>
+                    <p className="text-[10px] text-white/80 truncate">{jeu.editeur || '-'}</p>
+                    <p className="text-[10px] text-white/60 mt-0.5">{formatDate(jeu)}</p>
                   </div>
-                </div>
+                </CardWrapper>
               );
             })}
           </div>
