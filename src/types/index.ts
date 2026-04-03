@@ -19,7 +19,8 @@ export interface JeuAVenir {
   id: string;
   nomJeu: string;
   editeur: string;
-  dateDebut?: string;      // Date de début de campagne prévue
+  dateDebut?: string;      // Date de début de campagne prévue (si connue)
+  anneePrevue?: number;    // Année prévue (si date inconnue)
   urlCampagne?: string;
   imageUrl?: string;
   dateAjout: string;

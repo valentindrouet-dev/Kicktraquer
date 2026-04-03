@@ -70,19 +70,25 @@ export function saveParametres(parametres: Parametres): void {
 }
 
 export function exportData(): string {
-  return JSON.stringify(getAppData(), null, 2);
+  const appData = getAppData();
+  const jeuxAVenir = getJeuxAVenir();
+  return JSON.stringify({ ...appData, jeuxAVenir }, null, 2);
 }
 
 export function importData(jsonString: string): boolean {
   try {
-    const data = JSON.parse(jsonString) as AppData;
+    const data = JSON.parse(jsonString);
     if (!data.campagnes || !Array.isArray(data.campagnes)) {
       return false;
     }
     if (!data.parametres) {
       data.parametres = PARAMETRES_DEFAUT;
     }
-    saveAppData(data);
+    saveAppData({ campagnes: data.campagnes, parametres: data.parametres });
+    // Importer aussi les jeux à venir s'ils existent
+    if (data.jeuxAVenir && Array.isArray(data.jeuxAVenir)) {
+      saveJeuxAVenir(data.jeuxAVenir);
+    }
     return true;
   } catch {
     return false;

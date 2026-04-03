@@ -20,6 +20,7 @@ export default function AVenirPage() {
     nomJeu: '',
     editeur: '',
     dateDebut: '',
+    anneePrevue: '',
     urlCampagne: '',
     imageUrl: '',
   });
@@ -31,12 +32,14 @@ export default function AVenirPage() {
   const loadData = () => {
     setIsLoading(true);
     const data = getJeuxAVenir();
-    // Trier par date de début (les plus proches en premier)
+    // Trier par date/année (les plus proches en premier)
     data.sort((a, b) => {
-      if (!a.dateDebut && !b.dateDebut) return 0;
-      if (!a.dateDebut) return 1;
-      if (!b.dateDebut) return -1;
-      return a.dateDebut.localeCompare(b.dateDebut);
+      const dateA = a.dateDebut || (a.anneePrevue ? `${a.anneePrevue}-12-31` : null);
+      const dateB = b.dateDebut || (b.anneePrevue ? `${b.anneePrevue}-12-31` : null);
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+      return dateA.localeCompare(dateB);
     });
     setJeux(data);
     setIsLoading(false);
@@ -49,12 +52,13 @@ export default function AVenirPage() {
         nomJeu: jeu.nomJeu,
         editeur: jeu.editeur,
         dateDebut: jeu.dateDebut || '',
+        anneePrevue: jeu.anneePrevue?.toString() || '',
         urlCampagne: jeu.urlCampagne || '',
         imageUrl: jeu.imageUrl || '',
       });
     } else {
       setEditingJeu(null);
-      setFormData({ nomJeu: '', editeur: '', dateDebut: '', urlCampagne: '', imageUrl: '' });
+      setFormData({ nomJeu: '', editeur: '', dateDebut: '', anneePrevue: '', urlCampagne: '', imageUrl: '' });
     }
     setShowModal(true);
   };
@@ -62,7 +66,7 @@ export default function AVenirPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingJeu(null);
-    setFormData({ nomJeu: '', editeur: '', dateDebut: '', urlCampagne: '', imageUrl: '' });
+    setFormData({ nomJeu: '', editeur: '', dateDebut: '', anneePrevue: '', urlCampagne: '', imageUrl: '' });
   };
 
   const handleSave = () => {
@@ -73,6 +77,7 @@ export default function AVenirPage() {
       nomJeu: formData.nomJeu.trim(),
       editeur: formData.editeur.trim(),
       dateDebut: formData.dateDebut || undefined,
+      anneePrevue: formData.anneePrevue ? parseInt(formData.anneePrevue, 10) : undefined,
       urlCampagne: formData.urlCampagne.trim() || undefined,
       imageUrl: formData.imageUrl.trim() || undefined,
       dateAjout: editingJeu?.dateAjout || new Date().toISOString().split('T')[0],
@@ -94,19 +99,28 @@ export default function AVenirPage() {
     loadData();
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Non définie';
-    return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const formatDate = (jeu: JeuAVenir) => {
+    if (jeu.dateDebut) {
+      return new Date(jeu.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    if (jeu.anneePrevue) {
+      return jeu.anneePrevue.toString();
+    }
+    return 'Non définie';
   };
 
-  const getDaysUntil = (dateStr?: string) => {
-    if (!dateStr) return null;
+  const getDaysUntil = (jeu: JeuAVenir) => {
+    if (!jeu.dateDebut) return null; // Pas de countdown pour les dates imprécises
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const target = new Date(dateStr);
+    const target = new Date(jeu.dateDebut);
     const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
   };
+
+  // Générer les options d'années (année actuelle + 5 ans)
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear + i);
 
   if (isLoading) {
     return (
@@ -150,7 +164,7 @@ export default function AVenirPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {jeux.map((jeu) => {
-              const daysUntil = getDaysUntil(jeu.dateDebut);
+              const daysUntil = getDaysUntil(jeu);
               return (
                 <div
                   key={jeu.id}
@@ -170,17 +184,23 @@ export default function AVenirPage() {
                         <span className="text-4xl">🎲</span>
                       </div>
                     )}
-                    {/* Badge countdown */}
-                    {daysUntil !== null && (
-                      <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    {/* Badge countdown ou année */}
+                    <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      daysUntil !== null ? (
                         daysUntil <= 0 ? 'bg-green-500 text-white' :
                         daysUntil <= 7 ? 'bg-orange-500 text-white' :
                         daysUntil <= 30 ? 'bg-yellow-500 text-white' :
                         'bg-cyan-500 text-white'
-                      }`}>
-                        {daysUntil <= 0 ? 'Maintenant !' : daysUntil === 1 ? 'Demain' : `J-${daysUntil}`}
-                      </div>
-                    )}
+                      ) : (
+                        jeu.anneePrevue ? 'bg-slate-500 text-white' : 'bg-slate-300 text-slate-700'
+                      )
+                    }`}>
+                      {daysUntil !== null ? (
+                        daysUntil <= 0 ? 'Maintenant !' : daysUntil === 1 ? 'Demain' : `J-${daysUntil}`
+                      ) : (
+                        jeu.anneePrevue ? jeu.anneePrevue : '?'
+                      )}
+                    </div>
                     {/* Actions */}
                     <div className="absolute top-2 right-2 flex gap-1">
                       {jeu.urlCampagne && (
@@ -213,7 +233,7 @@ export default function AVenirPage() {
                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                       <div className="flex items-center gap-1 text-xs text-slate-500">
                         <Calendar className="w-3.5 h-3.5" />
-                        <span>{formatDate(jeu.dateDebut)}</span>
+                        <span>{formatDate(jeu)}</span>
                       </div>
                       {showDeleteConfirm === jeu.id ? (
                         <div className="flex items-center gap-1">
@@ -286,17 +306,37 @@ export default function AVenirPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Date de début de campagne
-                </label>
-                <input
-                  type="date"
-                  value={formData.dateDebut}
-                  onChange={(e) => setFormData({ ...formData, dateDebut: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Date de début
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.dateDebut}
+                    onChange={(e) => setFormData({ ...formData, dateDebut: e.target.value, anneePrevue: '' })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Ou année prévue
+                  </label>
+                  <select
+                    value={formData.anneePrevue}
+                    onChange={(e) => setFormData({ ...formData, anneePrevue: e.target.value, dateDebut: '' })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  >
+                    <option value="">-</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <p className="text-xs text-slate-500 -mt-2">
+                Renseignez soit une date précise, soit juste l'année si inconnue
+              </p>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
