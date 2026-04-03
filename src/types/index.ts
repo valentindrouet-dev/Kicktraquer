@@ -68,6 +68,7 @@ export const PARAMETRES_DEFAUT: Parametres = {
     'Autre'
   ],
   statuts: [
+    'À venir',
     'En cours',
     'Financé',
     'En production',

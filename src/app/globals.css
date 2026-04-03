@@ -47,6 +47,10 @@ body {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
 }
 
+.badge-a-venir {
+  @apply bg-cyan-100 text-cyan-800;
+}
+
 .badge-en-cours {
   @apply bg-blue-100 text-blue-800;
 }

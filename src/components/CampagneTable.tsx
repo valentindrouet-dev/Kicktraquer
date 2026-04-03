@@ -76,6 +76,9 @@ function formatMontant(montant: number, devise: string): string {
 function getStatutColor(statut: string): string {
   const normalized = statut.toLowerCase().replace(/\s+/g, '-');
   switch (normalized) {
+    case 'à-venir':
+    case 'a-venir':
+      return 'bg-cyan-100 text-cyan-800';
     case 'en-cours':
       return 'bg-blue-100 text-blue-800';
     case 'financé':

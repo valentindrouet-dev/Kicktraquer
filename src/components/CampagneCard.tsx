@@ -21,6 +21,9 @@ const MOIS_NOMS = [
 function getStatutBadgeClass(statut: string): string {
   const normalized = statut.toLowerCase().replace(/\s+/g, '-');
   switch (normalized) {
+    case 'à-venir':
+    case 'a-venir':
+      return 'badge-a-venir';
     case 'en-cours':
       return 'badge-en-cours';
     case 'financé':

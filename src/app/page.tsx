@@ -40,6 +40,7 @@ export default function HomePage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
   const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
+  const [showAVenir, setShowAVenir] = useState(false);
   const [showRevendus, setShowRevendus] = useState(false);
   const [showNonJouesOnly, setShowNonJouesOnly] = useState(false);
 
@@ -144,6 +145,11 @@ export default function HomePage() {
   const filteredCampagnes = useMemo(() => {
     let result = [...campagnes];
 
+    // Filtre À venir (masqués par défaut)
+    if (!showAVenir) {
+      result = result.filter((c) => c.statut !== 'À venir');
+    }
+
     // Filtre Revendus (masqués par défaut)
     if (!showRevendus) {
       result = result.filter((c) => c.statut !== 'Revendu');
@@ -243,7 +249,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showAVenir, showRevendus, showNonJouesOnly]);
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
@@ -514,6 +520,17 @@ export default function HomePage() {
               </button>
             </div>
 
+            {/* Toggle À venir */}
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showAVenir}
+                onChange={(e) => setShowAVenir(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-cyan-500 focus:ring-cyan-500"
+              />
+              <span>À venir</span>
+            </label>
+
             {/* Toggle Revendus */}
             <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
               <input
@@ -522,7 +539,7 @@ export default function HomePage() {
                 onChange={(e) => setShowRevendus(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
               />
-              <span>Afficher Revendus</span>
+              <span>Revendus</span>
             </label>
 
             {/* Toggle Non Joués */}
