@@ -80,9 +80,19 @@ export default function StatistiquesPage() {
     const parEditeur: Record<string, { count: number; total: number }> = {};
     const campagnesAvecReste: { nom: string; reste: number; devise: string }[] = [];
 
+    // Nouvelles stats
+    const campagnesParAnnee: Record<number, number> = {};
+    const campagnesParMois: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0 };
+    const campagnesParJour: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const pledgeParAnnee: Record<number, { total: number; count: number }> = {};
+    const pledgeRanges: Record<string, number> = { '0-50': 0, '50-100': 0, '100-200': 0, '200-500': 0, '500+': 0 };
+    const topPledges: { nom: string; total: number }[] = [];
+    const delaisLivraison: number[] = [];
+
     let totalPledge = 0, totalFraisPort = 0, totalAddons = 0, totalPaye = 0;
     let totalFinancementGlobal = 0, totalFigurines = 0, campagnesAvecFigurines = 0;
     let fraisPortNonRenseignes = 0, jeuxJoues = 0, jeuxNonJoues = 0;
+    let campagnesAnnulees = 0, campagnesRemboursees = 0, campagnesRevendues = 0;
 
     filteredCampagnes.forEach((c) => {
       const multiplier = c.devise === deviseAffichage ? 1 :
@@ -105,6 +115,46 @@ export default function StatistiquesPage() {
       if (!c.fraisPort || c.fraisPort === 0) fraisPortNonRenseignes++;
       if (c.nombreFigurines && c.nombreFigurines > 0) { totalFigurines += c.nombreFigurines; campagnesAvecFigurines++; }
       if (c.dejaJoue) jeuxJoues++; else jeuxNonJoues++;
+      if (c.statut === 'Annulé') campagnesAnnulees++;
+      if (c.statut === 'Remboursé') campagnesRemboursees++;
+      if (c.statut === 'Revendu') campagnesRevendues++;
+
+      // Campagnes par année (date de fin de campagne)
+      if (c.dateFinCampagne) {
+        const anneeFinCampagne = new Date(c.dateFinCampagne).getFullYear();
+        campagnesParAnnee[anneeFinCampagne] = (campagnesParAnnee[anneeFinCampagne] || 0) + 1;
+
+        // Pledge moyen par année
+        if (!pledgeParAnnee[anneeFinCampagne]) pledgeParAnnee[anneeFinCampagne] = { total: 0, count: 0 };
+        pledgeParAnnee[anneeFinCampagne].total += pledgeConverti;
+        pledgeParAnnee[anneeFinCampagne].count++;
+
+        // Mois de financement
+        const mois = new Date(c.dateFinCampagne).getMonth() + 1;
+        campagnesParMois[mois]++;
+
+        // Jour de la semaine
+        const jour = new Date(c.dateFinCampagne).getDay();
+        campagnesParJour[jour]++;
+      }
+
+      // Délai de livraison (entre dateFinCampagne et dateLivraisonReelle si livré)
+      if (c.statut === 'Livré' && c.dateFinCampagne && c.dateLivraisonReelle) {
+        const debut = new Date(c.dateFinCampagne);
+        const fin = new Date(c.dateLivraisonReelle);
+        const delaiMois = (fin.getFullYear() - debut.getFullYear()) * 12 + (fin.getMonth() - debut.getMonth());
+        if (delaiMois > 0) delaisLivraison.push(delaiMois);
+      }
+
+      // Distribution des pledges
+      if (pledgeConverti < 50) pledgeRanges['0-50']++;
+      else if (pledgeConverti < 100) pledgeRanges['50-100']++;
+      else if (pledgeConverti < 200) pledgeRanges['100-200']++;
+      else if (pledgeConverti < 500) pledgeRanges['200-500']++;
+      else pledgeRanges['500+']++;
+
+      // Top pledges
+      topPledges.push({ nom: c.nomJeu, total: totalCampagne });
 
       // Reste à payer par campagne
       const resteCampagne = totalCampagne - payeCampagne;
@@ -162,6 +212,47 @@ export default function StatistiquesPage() {
     const topEditeurs = Object.entries(parEditeur).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
     campagnesAvecReste.sort((a, b) => b.reste - a.reste);
 
+    // Top 5 pledges les plus élevés
+    topPledges.sort((a, b) => b.total - a.total);
+    const top5Pledges = topPledges.slice(0, 5);
+
+    // Mois les plus actifs
+    const moisNoms = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const joursNoms = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+    const topMois = Object.entries(campagnesParMois)
+      .map(([m, count]) => ({ mois: moisNoms[parseInt(m)], count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    const topJours = Object.entries(campagnesParJour)
+      .map(([j, count]) => ({ jour: joursNoms[parseInt(j)], count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    // Délai moyen de livraison
+    const delaiMoyenLivraison = delaisLivraison.length > 0
+      ? delaisLivraison.reduce((a, b) => a + b, 0) / delaisLivraison.length
+      : null;
+
+    // Évolution pledge moyen par année
+    const pledgeMoyenParAnnee = Object.entries(pledgeParAnnee)
+      .map(([annee, data]) => ({ annee: parseInt(annee), moyenne: data.total / data.count }))
+      .sort((a, b) => a.annee - b.annee);
+
+    // Ratio addons/pledge
+    const ratioAddons = totalPledge > 0 ? (totalAddons / totalPledge) * 100 : 0;
+    const ratioFraisPort = totalPledge > 0 ? (totalFraisPort / totalPledge) * 100 : 0;
+
+    // Première et dernière campagne
+    const campagnesAvecDate = filteredCampagnes.filter(c => c.dateFinCampagne);
+    const datesSorted = campagnesAvecDate.sort((a, b) => new Date(a.dateFinCampagne!).getTime() - new Date(b.dateFinCampagne!).getTime());
+    const premiereCampagne = datesSorted.length > 0 ? datesSorted[0] : null;
+    const derniereCampagne = datesSorted.length > 0 ? datesSorted[datesSorted.length - 1] : null;
+
+    // Années d'activité
+    const anneesActives = Object.keys(campagnesParAnnee).length;
+
     return {
       nombreTotal: filteredCampagnes.length,
       totalPledge, totalFraisPort, totalAddons, totalDu, totalPaye, resteAPayer,
@@ -171,6 +262,11 @@ export default function StatistiquesPage() {
       fraisPortNonRenseignes, livrees, enAttente, jeuxJoues, jeuxNonJoues,
       moyennePledge: totalPledge / filteredCampagnes.length,
       prixParFigurine: campagnesAvecFigurines > 0 ? totalPledge / totalFigurines : 0,
+      // Nouvelles stats
+      campagnesParAnnee, campagnesParMois, pledgeRanges, top5Pledges,
+      topMois, topJours, delaiMoyenLivraison, pledgeMoyenParAnnee,
+      campagnesAnnulees, campagnesRemboursees, campagnesRevendues,
+      ratioAddons, ratioFraisPort, premiereCampagne, derniereCampagne, anneesActives,
     };
   }, [filteredCampagnes, deviseAffichage]);
 
@@ -481,6 +577,288 @@ export default function StatistiquesPage() {
                       <span className="font-medium text-green-700">{formatMontantShort(stats.totalFinancementGlobal)}</span>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* NOUVELLES STATISTIQUES */}
+            <h2 className="text-lg font-bold text-slate-800 mb-3 mt-6">📈 Analyses avancées</h2>
+
+            {/* Campagnes par année + Périodes */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+              {/* Campagnes par année */}
+              {Object.keys(stats.campagnesParAnnee).length > 0 && (
+                <div className="bg-white rounded-lg border border-slate-200 p-3">
+                  <h2 className="text-sm font-semibold text-slate-800 mb-2 flex items-center gap-1">
+                    <Calendar className="w-4 h-4 text-slate-400" /> Campagnes par année
+                  </h2>
+                  <div className="space-y-1.5">
+                    {Object.entries(stats.campagnesParAnnee).sort(([a], [b]) => Number(b) - Number(a)).map(([annee, count]) => {
+                      const maxCount = Math.max(...Object.values(stats.campagnesParAnnee));
+                      const pct = (count / maxCount) * 100;
+                      return (
+                        <div key={annee}>
+                          <div className="flex justify-between text-sm mb-0.5">
+                            <span className="font-medium">{annee}</span>
+                            <span className="text-slate-600">{count} campagne{count > 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-1.5">
+                            <div className="h-1.5 rounded-full bg-primary-500" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Mois les plus actifs */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">🗓️ Mois les plus actifs</h2>
+                <div className="space-y-2">
+                  {stats.topMois.filter(m => m.count > 0).map((m, i) => (
+                    <div key={m.mois} className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-slate-300 text-slate-700' : 'bg-amber-600 text-white'}`}>
+                        {i + 1}
+                      </span>
+                      <span className="text-sm flex-1">{m.mois}</span>
+                      <span className="text-sm text-slate-600">{m.count} campagnes</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <h3 className="text-xs font-medium text-slate-500 mb-2">Répartition mensuelle</h3>
+                  <div className="flex gap-0.5 h-8">
+                    {Object.entries(stats.campagnesParMois).map(([mois, count]) => {
+                      const maxMois = Math.max(...Object.values(stats.campagnesParMois));
+                      const pct = maxMois > 0 ? (count / maxMois) * 100 : 0;
+                      const moisNoms = ['', 'J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+                      return (
+                        <div key={mois} className="flex-1 flex flex-col items-center justify-end" title={`${count} en ${moisNoms[parseInt(mois)]}`}>
+                          <div className="w-full bg-primary-400 rounded-t" style={{ height: `${pct}%`, minHeight: count > 0 ? '4px' : '0' }} />
+                          <span className="text-[8px] text-slate-400 mt-0.5">{moisNoms[parseInt(mois)]}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Jour de la semaine */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">📅 Jours préférés</h2>
+                <div className="space-y-2 mb-3">
+                  {stats.topJours.filter(j => j.count > 0).map((j, i) => (
+                    <div key={j.jour} className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-slate-300 text-slate-700' : 'bg-amber-600 text-white'}`}>
+                        {i + 1}
+                      </span>
+                      <span className="text-sm flex-1">{j.jour}</span>
+                      <span className="text-sm text-slate-600">{j.count}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pt-3 border-t border-slate-100">
+                  <div className="flex gap-1 h-10">
+                    {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((jour, i) => {
+                      const jourIdx = [1, 2, 3, 4, 5, 6, 0][i]; // Lundi=1 à Dimanche=0
+                      const count = stats.campagnesParMois ? Object.values(stats.campagnesParMois)[0] : 0;
+                      const jourCount = Object.entries(stats.campagnesParMois).length > 0 ?
+                        (Object.entries({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, ...filteredCampagnes.reduce((acc, c) => {
+                          if (c.dateFinCampagne) {
+                            const d = new Date(c.dateFinCampagne).getDay();
+                            acc[d] = (acc[d] || 0) + 1;
+                          }
+                          return acc;
+                        }, {} as Record<number, number>) }).find(([k]) => parseInt(k) === jourIdx)?.[1] || 0) : 0;
+                      const maxJour = Math.max(...Object.values(filteredCampagnes.reduce((acc, c) => {
+                        if (c.dateFinCampagne) {
+                          const d = new Date(c.dateFinCampagne).getDay();
+                          acc[d] = (acc[d] || 0) + 1;
+                        }
+                        return acc;
+                      }, {} as Record<number, number>)), 1);
+                      const pct = (jourCount / maxJour) * 100;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center justify-end">
+                          <div className="w-full bg-cyan-400 rounded-t" style={{ height: `${pct}%`, minHeight: jourCount > 0 ? '4px' : '0' }} />
+                          <span className="text-[9px] text-slate-500 mt-0.5">{jour}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Distribution pledges + Top 5 + Évolution */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+              {/* Distribution des pledges */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">💰 Distribution des pledges</h2>
+                <div className="space-y-1.5">
+                  {Object.entries(stats.pledgeRanges).map(([range, count]) => {
+                    const pct = (count / stats.nombreTotal) * 100;
+                    const colors: Record<string, string> = {
+                      '0-50': 'bg-green-400',
+                      '50-100': 'bg-lime-400',
+                      '100-200': 'bg-yellow-400',
+                      '200-500': 'bg-orange-400',
+                      '500+': 'bg-red-400',
+                    };
+                    return (
+                      <div key={range}>
+                        <div className="flex justify-between text-sm mb-0.5">
+                          <span>{range}€</span>
+                          <span className="text-slate-600">{count} ({pct.toFixed(0)}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className={`h-1.5 rounded-full ${colors[range]}`} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Top 5 pledges */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">🏆 Top 5 plus gros pledges</h2>
+                <div className="space-y-1.5">
+                  {stats.top5Pledges.map((p, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${i === 0 ? 'bg-yellow-400 text-yellow-900' : i === 1 ? 'bg-slate-300 text-slate-700' : i === 2 ? 'bg-amber-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                        {i + 1}
+                      </span>
+                      <span className="text-sm truncate flex-1">{p.nom}</span>
+                      <span className="text-sm font-medium text-primary-600 whitespace-nowrap">{formatMontant(p.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Évolution pledge moyen */}
+              {stats.pledgeMoyenParAnnee.length > 0 && (
+                <div className="bg-white rounded-lg border border-slate-200 p-3">
+                  <h2 className="text-sm font-semibold text-slate-800 mb-2">📊 Évolution pledge moyen</h2>
+                  <div className="space-y-1.5">
+                    {stats.pledgeMoyenParAnnee.map((p) => (
+                      <div key={p.annee} className="flex justify-between text-sm">
+                        <span>{p.annee}</span>
+                        <span className="font-medium">{formatMontant(p.moyenne)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {stats.pledgeMoyenParAnnee.length >= 2 && (
+                    <div className="mt-2 pt-2 border-t border-slate-100">
+                      <div className="text-xs text-slate-500">
+                        {(() => {
+                          const first = stats.pledgeMoyenParAnnee[0].moyenne;
+                          const last = stats.pledgeMoyenParAnnee[stats.pledgeMoyenParAnnee.length - 1].moyenne;
+                          const diff = ((last - first) / first) * 100;
+                          return diff > 0
+                            ? <span className="text-red-600">↑ +{diff.toFixed(0)}% depuis {stats.pledgeMoyenParAnnee[0].annee}</span>
+                            : <span className="text-green-600">↓ {diff.toFixed(0)}% depuis {stats.pledgeMoyenParAnnee[0].annee}</span>;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Ratios et délais */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+              {/* Ratios financiers */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">📐 Ratios</h2>
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-600">Add-ons / Pledge</span>
+                      <span className="font-medium">{stats.ratioAddons.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-indigo-400" style={{ width: `${Math.min(stats.ratioAddons, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-600">Frais port / Pledge</span>
+                      <span className="font-medium">{stats.ratioFraisPort.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="h-2 rounded-full bg-rose-400" style={{ width: `${Math.min(stats.ratioFraisPort, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-slate-100 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Taux annulation</span>
+                      <span className={stats.campagnesAnnulees > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                        {((stats.campagnesAnnulees / stats.nombreTotal) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-slate-600">Taux revente</span>
+                      <span className="text-orange-600">{((stats.campagnesRevendues / stats.nombreTotal) * 100).toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Délai de livraison */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">⏱️ Délais</h2>
+                <div className="space-y-3">
+                  {stats.delaiMoyenLivraison !== null && (
+                    <div className="text-center p-3 bg-slate-50 rounded-lg">
+                      <div className="text-3xl font-bold text-primary-600">{stats.delaiMoyenLivraison.toFixed(1)}</div>
+                      <div className="text-xs text-slate-500">mois en moyenne entre fin de campagne et livraison</div>
+                    </div>
+                  )}
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Campagnes livrées</span>
+                      <span className="font-medium">{stats.livrees}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">En attente</span>
+                      <span className="font-medium">{stats.enAttente}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="bg-white rounded-lg border border-slate-200 p-3">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">🎯 Votre parcours</h2>
+                <div className="space-y-3 text-sm">
+                  <div className="p-2 bg-green-50 rounded">
+                    <div className="text-xs text-green-600 mb-0.5">Première campagne</div>
+                    {stats.premiereCampagne ? (
+                      <>
+                        <div className="font-medium text-green-800 truncate">{stats.premiereCampagne.nomJeu}</div>
+                        <div className="text-xs text-green-600">
+                          {stats.premiereCampagne.dateFinCampagne && new Date(stats.premiereCampagne.dateFinCampagne).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                        </div>
+                      </>
+                    ) : <span className="text-slate-400">-</span>}
+                  </div>
+                  <div className="p-2 bg-blue-50 rounded">
+                    <div className="text-xs text-blue-600 mb-0.5">Dernière campagne</div>
+                    {stats.derniereCampagne ? (
+                      <>
+                        <div className="font-medium text-blue-800 truncate">{stats.derniereCampagne.nomJeu}</div>
+                        <div className="text-xs text-blue-600">
+                          {stats.derniereCampagne.dateFinCampagne && new Date(stats.derniereCampagne.dateFinCampagne).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                        </div>
+                      </>
+                    ) : <span className="text-slate-400">-</span>}
+                  </div>
+                  <div className="text-center pt-2 border-t border-slate-100">
+                    <span className="text-2xl font-bold text-primary-600">{stats.anneesActives}</span>
+                    <span className="text-slate-500 ml-1">année{stats.anneesActives > 1 ? 's' : ''} d&apos;activité</span>
+                  </div>
                 </div>
               </div>
             </div>
