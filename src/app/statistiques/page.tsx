@@ -138,10 +138,11 @@ export default function StatistiquesPage() {
         campagnesParJour[jour]++;
       }
 
-      // Délai de livraison (entre dateFinCampagne et dateLivraisonReelle si livré)
-      if (c.statut === 'Livré' && c.dateFinCampagne && c.dateLivraisonReelle) {
+      // Délai de livraison (entre dateFinCampagne et livraison prévue)
+      if (c.statut === 'Livré' && c.dateFinCampagne && c.anneeLivraison) {
         const debut = new Date(c.dateFinCampagne);
-        const fin = new Date(c.dateLivraisonReelle);
+        const moisLiv = c.moisLivraison || 6; // Par défaut milieu d'année
+        const fin = new Date(c.anneeLivraison, moisLiv - 1, 1);
         const delaiMois = (fin.getFullYear() - debut.getFullYear()) * 12 + (fin.getMonth() - debut.getMonth());
         if (delaiMois > 0) delaisLivraison.push(delaiMois);
       }
