@@ -263,7 +263,7 @@ export default function StatistiquesPage() {
       moyennePledge: totalPledge / filteredCampagnes.length,
       prixParFigurine: campagnesAvecFigurines > 0 ? totalPledge / totalFigurines : 0,
       // Nouvelles stats
-      campagnesParAnnee, campagnesParMois, pledgeRanges, top5Pledges,
+      campagnesParAnnee, campagnesParMois, campagnesParJour, pledgeRanges, top5Pledges,
       topMois, topJours, delaiMoyenLivraison, pledgeMoyenParAnnee,
       campagnesAnnulees, campagnesRemboursees, campagnesRevendues,
       ratioAddons, ratioFraisPort, premiereCampagne, derniereCampagne, anneesActives,
@@ -660,32 +660,24 @@ export default function StatistiquesPage() {
                 </div>
                 <div className="pt-3 border-t border-slate-100">
                   <div className="flex gap-1 h-10">
-                    {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((jour, i) => {
-                      const jourIdx = [1, 2, 3, 4, 5, 6, 0][i]; // Lundi=1 à Dimanche=0
-                      const count = stats.campagnesParMois ? Object.values(stats.campagnesParMois)[0] : 0;
-                      const jourCount = Object.entries(stats.campagnesParMois).length > 0 ?
-                        (Object.entries({ 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, ...filteredCampagnes.reduce((acc, c) => {
-                          if (c.dateFinCampagne) {
-                            const d = new Date(c.dateFinCampagne).getDay();
-                            acc[d] = (acc[d] || 0) + 1;
-                          }
-                          return acc;
-                        }, {} as Record<number, number>) }).find(([k]) => parseInt(k) === jourIdx)?.[1] || 0) : 0;
-                      const maxJour = Math.max(...Object.values(filteredCampagnes.reduce((acc, c) => {
-                        if (c.dateFinCampagne) {
-                          const d = new Date(c.dateFinCampagne).getDay();
-                          acc[d] = (acc[d] || 0) + 1;
-                        }
-                        return acc;
-                      }, {} as Record<number, number>)), 1);
-                      const pct = (jourCount / maxJour) * 100;
-                      return (
-                        <div key={i} className="flex-1 flex flex-col items-center justify-end">
-                          <div className="w-full bg-cyan-400 rounded-t" style={{ height: `${pct}%`, minHeight: jourCount > 0 ? '4px' : '0' }} />
-                          <span className="text-[9px] text-slate-500 mt-0.5">{jour}</span>
-                        </div>
-                      );
-                    })}
+                    {(() => {
+                      // Réorganiser les jours: Lundi (1) à Dimanche (0)
+                      const joursOrdre = [1, 2, 3, 4, 5, 6, 0];
+                      const joursLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+                      const joursData = joursOrdre.map(idx => stats.campagnesParJour[idx] || 0);
+                      const maxJour = Math.max(...joursData, 1);
+
+                      return joursLabels.map((label, i) => {
+                        const count = joursData[i];
+                        const pct = (count / maxJour) * 100;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end">
+                            <div className="w-full bg-cyan-400 rounded-t" style={{ height: `${pct}%`, minHeight: count > 0 ? '4px' : '0' }} />
+                            <span className="text-[9px] text-slate-500 mt-0.5">{label}</span>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>
