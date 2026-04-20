@@ -398,15 +398,15 @@ export default function CampagneTable({
                   <React.Fragment key={campagne.id}>
                     {showYearSeparator && stats && (
                       <tr>
-                        <td colSpan={visibleColumns.length} className="py-1.5 bg-slate-200">
-                          <div className="flex items-center justify-center gap-4 text-xs font-semibold text-slate-600">
-                            <span className="text-slate-800">{currentYear}</span>
-                            <span>•</span>
+                        <td colSpan={visibleColumns.length} className="py-2 bg-slate-700">
+                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-300">
+                            <span className="text-lg font-bold text-white">{currentYear}</span>
+                            <span className="text-slate-500">•</span>
                             <span>{stats.count} campagne{stats.count > 1 ? 's' : ''}</span>
-                            <span>•</span>
-                            <span className="text-primary-600">{stats.total.toLocaleString('fr-FR')} €</span>
-                            <span>•</span>
-                            <span className="text-green-600">{stats.delivered} livrée{stats.delivered > 1 ? 's' : ''}</span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-cyan-400">{stats.total.toLocaleString('fr-FR')} €</span>
+                            <span className="text-slate-500">•</span>
+                            <span className="text-green-400">{stats.delivered} livrée{stats.delivered > 1 ? 's' : ''}</span>
                           </div>
                         </td>
                       </tr>
