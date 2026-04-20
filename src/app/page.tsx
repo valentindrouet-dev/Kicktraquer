@@ -42,6 +42,7 @@ export default function HomePage() {
   const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [showRevendus, setShowRevendus] = useState(false);
   const [showNonJouesOnly, setShowNonJouesOnly] = useState(false);
+  const [showJdrOnly, setShowJdrOnly] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -154,6 +155,11 @@ export default function HomePage() {
       result = result.filter((c) => !c.dejaJoue);
     }
 
+    // Filtre JDR uniquement
+    if (showJdrOnly) {
+      result = result.filter((c) => c.jdr);
+    }
+
     // Recherche
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -243,7 +249,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly, showJdrOnly]);
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
@@ -534,6 +540,17 @@ export default function HomePage() {
                 className="w-4 h-4 rounded border-slate-300 text-green-500 focus:ring-green-500"
               />
               <span>Non joués</span>
+            </label>
+
+            {/* Toggle JDR */}
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showJdrOnly}
+                onChange={(e) => setShowJdrOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-purple-500 focus:ring-purple-500"
+              />
+              <span>JDR</span>
             </label>
 
             {/* Contrôle de taille */}

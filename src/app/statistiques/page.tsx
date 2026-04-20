@@ -372,6 +372,12 @@ export default function StatistiquesPage() {
               <StatCard icon={<Clock className="w-4 h-4" />} label="Reste à payer" value={formatMontantShort(stats.resteAPayer)} color={stats.resteAPayer > 0 ? 'bg-orange-500' : 'bg-green-500'} />
               <StatCard icon={<CheckCircle className="w-4 h-4" />} label="Livrées" value={`${stats.livrees}/${stats.nombreTotal}`} color="bg-emerald-500" />
               <StatCard icon={<Gamepad2 className="w-4 h-4" />} label="Déjà joués" value={`${stats.jeuxJoues}/${stats.nombreTotal}`} color="bg-purple-500" />
+              {stats.totalPrixRevente > 0 && (
+                <StatCard icon={<DollarSign className="w-4 h-4" />} label="Récupéré reventes" value={`+${formatMontantShort(stats.totalPrixRevente)}`} color="bg-orange-500" />
+              )}
+              {stats.totalPrixRevente > 0 && (
+                <StatCard icon={<TrendingUp className="w-4 h-4" />} label="Coût net réel" value={formatMontantShort(stats.coutNetApresReventes)} color="bg-teal-600" />
+              )}
             </div>
 
             {/* Détails financiers */}
@@ -381,6 +387,15 @@ export default function StatistiquesPage() {
                 <div><span className="text-slate-500">Add-ons:</span> <span className="font-medium">{formatMontant(stats.totalAddons)}</span></div>
                 <div><span className="text-slate-500">Frais port:</span> <span className="font-medium">{formatMontant(stats.totalFraisPort)}</span></div>
                 <div><span className="text-slate-500">Pledge moyen:</span> <span className="font-medium">{formatMontant(stats.moyennePledge)}</span></div>
+                {stats.totalPrixRevente > 0 && (
+                  <div><span className="text-slate-500">Reventes:</span> <span className="font-medium text-orange-600">+{formatMontant(stats.totalPrixRevente)}</span></div>
+                )}
+                {stats.totalPrixRevente > 0 && (
+                  <div><span className="text-slate-500">Coût net réel:</span> <span className="font-medium text-teal-700">{formatMontant(stats.coutNetApresReventes)}</span></div>
+                )}
+                {stats.totalJdr > 0 && (
+                  <div><span className="text-slate-500">JDR / Livres:</span> <span className="font-medium text-purple-600">{stats.totalJdr} ({((stats.totalJdr / stats.nombreTotal) * 100).toFixed(0)}%)</span></div>
+                )}
               </div>
             </div>
 

@@ -156,11 +156,16 @@ export default function CampagneDetails({ campagne, onClose, onEdit, onToggleDej
             </button>
           </div>
 
-          {/* Badge statut et Déjà Joué */}
-          <div className="absolute bottom-4 left-4 flex items-center gap-3">
+          {/* Badge statut, JDR et Déjà Joué */}
+          <div className="absolute bottom-4 left-4 flex items-center gap-3 flex-wrap">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatutColor(campagne.statut)}`}>
               {campagne.statut}
             </span>
+            {campagne.jdr && (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500 text-white">
+                JDR / Livre
+              </span>
+            )}
             {onToggleDejaJoue && (
               <label className="flex items-center gap-2 px-3 py-1 bg-white/90 rounded-full cursor-pointer hover:bg-white transition-colors">
                 <input
@@ -326,12 +331,32 @@ export default function CampagneDetails({ campagne, onClose, onEdit, onToggleDej
                 <span>Total payé</span>
                 <span className="font-medium text-green-600">{formatMontant(totalPaye, campagne.devise)}</span>
               </div>
-              <div className="flex justify-between text-sm font-semibold">
-                <span>Reste à payer</span>
-                <span className={resteAPayer > 0 ? 'text-orange-600' : 'text-green-600'}>
-                  {formatMontant(resteAPayer, campagne.devise)}
-                </span>
-              </div>
+              {campagne.statut !== 'Revendu' && (
+                <div className="flex justify-between text-sm font-semibold">
+                  <span>Reste à payer</span>
+                  <span className={resteAPayer > 0 ? 'text-orange-600' : 'text-green-600'}>
+                    {formatMontant(resteAPayer, campagne.devise)}
+                  </span>
+                </div>
+              )}
+              {campagne.statut === 'Revendu' && campagne.prixRevente !== undefined && campagne.prixRevente > 0 && (
+                <>
+                  <div className="flex justify-between text-sm text-orange-600 font-medium pt-1 border-t border-slate-200">
+                    <span>Prix de revente</span>
+                    <span>+{formatMontant(campagne.prixRevente, campagne.devise)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold">
+                    <span>Coût net réel</span>
+                    <span className={totalDu - campagne.prixRevente <= 0 ? 'text-green-600' : 'text-slate-700'}>
+                      {formatMontant(Math.max(0, totalDu - campagne.prixRevente), campagne.devise)}
+                      {totalDu - campagne.prixRevente <= 0 && <span className="text-xs font-normal ml-1">(bénéficiaire)</span>}
+                    </span>
+                  </div>
+                </>
+              )}
+              {campagne.statut === 'Revendu' && (!campagne.prixRevente || campagne.prixRevente === 0) && (
+                <p className="text-xs text-slate-400 italic pt-1">Prix de revente non renseigné</p>
+              )}
             </div>
           </div>
 
