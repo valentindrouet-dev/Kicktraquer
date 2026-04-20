@@ -408,7 +408,7 @@ export default function CampagneTable({
                             <span className="text-slate-400">•</span>
                             <span className="text-cyan-300 font-semibold">{stats.total.toLocaleString('fr-FR')} €</span>
                             <span className="text-slate-400">•</span>
-                            <span className="text-green-300">{stats.delivered} reçue{stats.delivered > 1 ? 's' : ''}</span>
+                            <span className="text-green-300">{stats.delivered}/{stats.count} reçue{stats.delivered > 1 ? 's' : ''}</span>
                             {stats.resold > 0 && (
                               <>
                                 <span className="text-slate-400">•</span>
