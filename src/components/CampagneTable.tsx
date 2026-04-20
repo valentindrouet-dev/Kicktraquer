@@ -374,14 +374,15 @@ export default function CampagneTable({
           <tbody>
             {(() => {
               // Pré-calcul des stats par année
-              const yearStats: Record<number, { count: number; total: number; delivered: number }> = {};
+              const yearStats: Record<number, { count: number; total: number; delivered: number; resold: number }> = {};
               campagnes.forEach(c => {
                 if (c.dateFinCampagne) {
                   const year = new Date(c.dateFinCampagne).getFullYear();
-                  if (!yearStats[year]) yearStats[year] = { count: 0, total: 0, delivered: 0 };
+                  if (!yearStats[year]) yearStats[year] = { count: 0, total: 0, delivered: 0, resold: 0 };
                   yearStats[year].count++;
                   yearStats[year].total += c.prixPledge + c.fraisPort + (c.addons || []).reduce((sum, a) => sum + a.prix * a.quantite, 0);
-                  if (c.statut === 'Livré') yearStats[year].delivered++;
+                  if (c.statut === 'Livré' || c.statut === 'Revendu') yearStats[year].delivered++;
+                  if (c.statut === 'Revendu') yearStats[year].resold++;
                 }
               });
 
@@ -398,15 +399,21 @@ export default function CampagneTable({
                   <React.Fragment key={campagne.id}>
                     {showYearSeparator && stats && (
                       <tr>
-                        <td colSpan={visibleColumns.length} className="py-2 bg-slate-700">
-                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-300">
-                            <span className="text-lg font-bold text-white">{currentYear}</span>
-                            <span className="text-slate-500">•</span>
+                        <td colSpan={visibleColumns.length} className="py-2 px-2">
+                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-600 bg-slate-200 rounded-lg py-2">
+                            <span className="text-base font-bold text-slate-800">{currentYear}</span>
+                            <span className="text-slate-400">•</span>
                             <span>{stats.count} campagne{stats.count > 1 ? 's' : ''}</span>
-                            <span className="text-slate-500">•</span>
-                            <span className="text-cyan-400">{stats.total.toLocaleString('fr-FR')} €</span>
-                            <span className="text-slate-500">•</span>
-                            <span className="text-green-400">{stats.delivered} livrée{stats.delivered > 1 ? 's' : ''}</span>
+                            <span className="text-slate-400">•</span>
+                            <span className="text-primary-600 font-semibold">{stats.total.toLocaleString('fr-FR')} €</span>
+                            <span className="text-slate-400">•</span>
+                            <span className="text-green-600">{stats.delivered} reçue{stats.delivered > 1 ? 's' : ''}</span>
+                            {stats.resold > 0 && (
+                              <>
+                                <span className="text-slate-400">•</span>
+                                <span className="text-orange-500">{stats.resold} revendue{stats.resold > 1 ? 's' : ''}</span>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
