@@ -204,16 +204,9 @@ export default function CampagneTable({
       case 'statut':
         return (
           <td key={column.id} className="py-3 px-4">
-            <div className="flex flex-col gap-1">
-              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
-                {campagne.statut}
-              </span>
-              {!campagne.fraisPortPayes && (
-                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
-                  <Truck className="w-3 h-3 text-white" />
-                </div>
-              )}
-            </div>
+            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
+              {campagne.statut}
+            </span>
           </td>
         );
       case 'niveauPledge':
@@ -234,8 +227,16 @@ export default function CampagneTable({
       }
       case 'fraisPort':
         return (
-          <td key={column.id} className="py-3 px-4 text-sm text-slate-600 text-right">
-            {campagne.fraisPort ? formatMontant(campagne.fraisPort, campagne.devise) : '-'}
+          <td key={column.id} className="py-3 px-4 text-sm text-right">
+            {!campagne.fraisPortPayes ? (
+              <div className="flex items-center justify-end gap-1">
+                <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
+                  <Truck className="w-2.5 h-2.5 text-white" />
+                </div>
+              </div>
+            ) : (
+              <span className="text-slate-600">{campagne.fraisPort ? formatMontant(campagne.fraisPort, campagne.devise) : '0 €'}</span>
+            )}
           </td>
         );
       case 'totalPaye':
