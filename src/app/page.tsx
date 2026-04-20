@@ -145,8 +145,10 @@ export default function HomePage() {
   const filteredCampagnes = useMemo(() => {
     let result = [...campagnes];
 
-    // Filtre Revendus (masqués par défaut)
-    if (!showRevendus) {
+    // Filtre Revendus uniquement
+    if (showRevendus) {
+      result = result.filter((c) => c.statut === 'Revendu');
+    } else {
       result = result.filter((c) => c.statut !== 'Revendu');
     }
 

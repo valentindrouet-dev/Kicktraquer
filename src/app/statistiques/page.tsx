@@ -93,7 +93,7 @@ export default function StatistiquesPage() {
     let totalFinancementGlobal = 0, totalFigurines = 0, campagnesAvecFigurines = 0;
     let fraisPortNonRenseignes = 0, jeuxJoues = 0, jeuxNonJoues = 0;
     let campagnesAnnulees = 0, campagnesRemboursees = 0, campagnesRevendues = 0;
-    let totalJdr = 0, totalReventes = 0, totalPrixRevente = 0;
+    let totalJdr = 0, totalReventes = 0, totalPrixRevente = 0, totalCoutJeuxRevendus = 0;
 
     filteredCampagnes.forEach((c) => {
       const multiplier = c.devise === deviseAffichage ? 1 :
@@ -121,6 +121,7 @@ export default function StatistiquesPage() {
       if (c.statut === 'Revendu') {
         campagnesRevendues++;
         totalReventes++;
+        totalCoutJeuxRevendus += totalCampagne;
         if (c.prixRevente) totalPrixRevente += c.prixRevente * multiplier;
       }
       if (c.jdr) totalJdr++;
@@ -274,8 +275,9 @@ export default function StatistiquesPage() {
       topMois, topJours, delaiMoyenLivraison, pledgeMoyenParAnnee,
       campagnesAnnulees, campagnesRemboursees, campagnesRevendues,
       ratioAddons, ratioFraisPort, premiereCampagne, derniereCampagne, anneesActives,
-      totalJdr, totalReventes, totalPrixRevente,
+      totalJdr, totalReventes, totalPrixRevente, totalCoutJeuxRevendus,
       coutNetApresReventes: totalDu - totalPrixRevente,
+      bilanReventes: totalPrixRevente - totalCoutJeuxRevendus,
     };
   }, [filteredCampagnes, deviseAffichage]);
 
@@ -372,11 +374,14 @@ export default function StatistiquesPage() {
               <StatCard icon={<Clock className="w-4 h-4" />} label="Reste à payer" value={formatMontantShort(stats.resteAPayer)} color={stats.resteAPayer > 0 ? 'bg-orange-500' : 'bg-green-500'} />
               <StatCard icon={<CheckCircle className="w-4 h-4" />} label="Livrées" value={`${stats.livrees}/${stats.nombreTotal}`} color="bg-emerald-500" />
               <StatCard icon={<Gamepad2 className="w-4 h-4" />} label="Déjà joués" value={`${stats.jeuxJoues}/${stats.nombreTotal}`} color="bg-purple-500" />
-              {stats.totalPrixRevente > 0 && (
-                <StatCard icon={<DollarSign className="w-4 h-4" />} label="Récupéré reventes" value={`+${formatMontantShort(stats.totalPrixRevente)}`} color="bg-orange-500" />
-              )}
-              {stats.totalPrixRevente > 0 && (
-                <StatCard icon={<TrendingUp className="w-4 h-4" />} label="Coût net réel" value={formatMontantShort(stats.coutNetApresReventes)} color="bg-teal-600" />
+              {stats.campagnesRevendues > 0 && (
+                <StatCard
+                  icon={<DollarSign className="w-4 h-4" />}
+                  label={`Bilan reventes (${stats.campagnesRevendues})`}
+                  value={`${stats.bilanReventes >= 0 ? '+' : ''}${formatMontantShort(stats.bilanReventes)}`}
+                  color={stats.bilanReventes >= 0 ? 'bg-green-600' : 'bg-red-500'}
+                  subtitle={stats.bilanReventes >= 0 ? 'bénéficiaire' : 'perte nette'}
+                />
               )}
             </div>
 
@@ -916,13 +921,14 @@ export default function StatistiquesPage() {
 }
 
 // Composant carte de statistique compacte
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+function StatCard({ icon, label, value, color, subtitle }: { icon: React.ReactNode; label: string; value: string; color: string; subtitle?: string }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2 flex items-center gap-2">
-      <div className={`${color} text-white p-1.5 rounded`}>{icon}</div>
+      <div className={`${color} text-white p-1.5 rounded shrink-0`}>{icon}</div>
       <div className="min-w-0">
         <p className="text-xs text-slate-500 truncate">{label}</p>
         <p className="text-sm font-bold text-slate-800 truncate">{value}</p>
+        {subtitle && <p className="text-[10px] text-slate-400 truncate">{subtitle}</p>}
       </div>
     </div>
   );
