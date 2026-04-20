@@ -53,6 +53,8 @@ export interface Campagne {
   notes?: string;
   dateAjout: string;
   dejaJoue?: boolean;      // Le jeu a-t-il déjà été joué ?
+  jdr?: boolean;           // Jeu de rôle / livre (pas un jeu de société) ?
+  prixRevente?: number;    // Prix auquel le jeu a été revendu
 }
 
 export interface Parametres {

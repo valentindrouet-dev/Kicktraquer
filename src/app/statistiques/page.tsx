@@ -93,6 +93,7 @@ export default function StatistiquesPage() {
     let totalFinancementGlobal = 0, totalFigurines = 0, campagnesAvecFigurines = 0;
     let fraisPortNonRenseignes = 0, jeuxJoues = 0, jeuxNonJoues = 0;
     let campagnesAnnulees = 0, campagnesRemboursees = 0, campagnesRevendues = 0;
+    let totalJdr = 0, totalReventes = 0, totalPrixRevente = 0;
 
     filteredCampagnes.forEach((c) => {
       const multiplier = c.devise === deviseAffichage ? 1 :
@@ -117,7 +118,12 @@ export default function StatistiquesPage() {
       if (c.dejaJoue) jeuxJoues++; else jeuxNonJoues++;
       if (c.statut === 'Annulé') campagnesAnnulees++;
       if (c.statut === 'Remboursé') campagnesRemboursees++;
-      if (c.statut === 'Revendu') campagnesRevendues++;
+      if (c.statut === 'Revendu') {
+        campagnesRevendues++;
+        totalReventes++;
+        if (c.prixRevente) totalPrixRevente += c.prixRevente * multiplier;
+      }
+      if (c.jdr) totalJdr++;
 
       // Campagnes par année (date de fin de campagne)
       if (c.dateFinCampagne) {
@@ -268,6 +274,8 @@ export default function StatistiquesPage() {
       topMois, topJours, delaiMoyenLivraison, pledgeMoyenParAnnee,
       campagnesAnnulees, campagnesRemboursees, campagnesRevendues,
       ratioAddons, ratioFraisPort, premiereCampagne, derniereCampagne, anneesActives,
+      totalJdr, totalReventes, totalPrixRevente,
+      coutNetApresReventes: totalDu - totalPrixRevente,
     };
   }, [filteredCampagnes, deviseAffichage]);
 
@@ -578,6 +586,24 @@ export default function StatistiquesPage() {
                       <span className="font-medium text-green-700">{formatMontantShort(stats.totalFinancementGlobal)}</span>
                     </div>
                   )}
+                  {stats.totalJdr > 0 && (
+                    <div className="flex justify-between p-1.5 bg-purple-50 rounded">
+                      <span className="text-purple-700">JDR / Livres</span>
+                      <span className="font-medium text-purple-700">{stats.totalJdr} ({((stats.totalJdr / stats.nombreTotal) * 100).toFixed(0)}%)</span>
+                    </div>
+                  )}
+                  {stats.totalPrixRevente > 0 && (
+                    <div className="flex justify-between p-1.5 bg-orange-50 rounded">
+                      <span className="text-orange-700">Récupéré reventes</span>
+                      <span className="font-medium text-orange-700">+{formatMontantShort(stats.totalPrixRevente)}</span>
+                    </div>
+                  )}
+                  {stats.totalPrixRevente > 0 && (
+                    <div className="flex justify-between p-1.5 bg-slate-50 rounded">
+                      <span className="text-slate-700">Coût net réel</span>
+                      <span className={`font-medium ${stats.coutNetApresReventes <= stats.totalDu * 0.8 ? 'text-green-700' : 'text-slate-700'}`}>{formatMontantShort(stats.coutNetApresReventes)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -784,17 +810,29 @@ export default function StatistiquesPage() {
                       <div className="h-2 rounded-full bg-rose-400" style={{ width: `${Math.min(stats.ratioFraisPort, 100)}%` }} />
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-slate-100 text-sm">
+                  <div className="pt-2 border-t border-slate-100 text-sm space-y-1">
                     <div className="flex justify-between">
                       <span className="text-slate-600">Taux annulation</span>
                       <span className={stats.campagnesAnnulees > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
                         {((stats.campagnesAnnulees / stats.nombreTotal) * 100).toFixed(1)}%
                       </span>
                     </div>
-                    <div className="flex justify-between mt-1">
+                    <div className="flex justify-between">
                       <span className="text-slate-600">Taux revente</span>
                       <span className="text-orange-600">{((stats.campagnesRevendues / stats.nombreTotal) * 100).toFixed(1)}%</span>
                     </div>
+                    {stats.totalPrixRevente > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Économies reventes</span>
+                        <span className="text-green-600 font-medium">-{formatMontantShort(stats.totalPrixRevente)}</span>
+                      </div>
+                    )}
+                    {stats.totalJdr > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Part JDR</span>
+                        <span className="text-purple-600">{((stats.totalJdr / stats.nombreTotal) * 100).toFixed(1)}%</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

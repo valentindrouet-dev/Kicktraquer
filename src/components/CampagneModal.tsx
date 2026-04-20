@@ -53,6 +53,8 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   idEngagement: '',
   notes: '',
   dejaJoue: false,
+  jdr: false,
+  prixRevente: undefined,
 };
 
 export default function CampagneModal({
@@ -617,8 +619,8 @@ export default function CampagneModal({
             />
           </div>
 
-          {/* Déjà Joué */}
-          <div className="flex items-center">
+          {/* Options */}
+          <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -628,7 +630,42 @@ export default function CampagneModal({
               />
               <span className="text-sm font-medium text-slate-700">Déjà joué</span>
             </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.jdr || false}
+                onChange={(e) => setFormData({ ...formData, jdr: e.target.checked })}
+                className="w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500"
+              />
+              <span className="text-sm font-medium text-slate-700">JDR / Livre</span>
+            </label>
           </div>
+
+          {/* Prix de revente — visible uniquement si statut Revendu */}
+          {formData.statut === 'Revendu' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Prix de revente <span className="text-slate-400 font-normal">({formData.devise})</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.prixRevente ?? ''}
+                onChange={(e) => setFormData({ ...formData, prixRevente: e.target.value ? parseFloat(e.target.value) : undefined })}
+                className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50"
+                placeholder="Ex: 45.00"
+              />
+              {formData.prixRevente !== undefined && formData.prixRevente > 0 && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Coût net : <span className={`font-medium ${totalDu - formData.prixRevente > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                    {(totalDu - formData.prixRevente).toFixed(2)} {formData.devise}
+                  </span>
+                  {' '}({formData.prixRevente >= totalDu ? '✓ revente bénéficiaire' : `perte de ${(totalDu - formData.prixRevente).toFixed(2)} ${formData.devise}`})
+                </p>
+              )}
+            </div>
+          )}
         </form>
 
         {/* Footer */}
