@@ -222,7 +222,7 @@ export default function CampagneTable({
         );
       case 'totalDu':
         return (
-          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 font-medium text-right">
+          <td key={column.id} className="py-3 px-4 text-sm font-semibold text-right text-primary-600">
             {formatMontant(totalDu, campagne.devise)}
           </td>
         );
