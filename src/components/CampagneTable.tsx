@@ -372,33 +372,56 @@ export default function CampagneTable({
             </tr>
           </thead>
           <tbody>
-            {campagnes.map((campagne, index) => {
-              // Séparateur d'année si tri par dateFinCampagne
-              const currentYear = campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).getFullYear() : null;
-              const prevYear = index > 0 && campagnes[index - 1]?.dateFinCampagne
-                ? new Date(campagnes[index - 1].dateFinCampagne!).getFullYear()
-                : null;
-              const showYearSeparator = sortField === 'dateFinCampagne' && currentYear && (index === 0 || currentYear !== prevYear);
+            {(() => {
+              // Pré-calcul des stats par année
+              const yearStats: Record<number, { count: number; total: number; delivered: number }> = {};
+              campagnes.forEach(c => {
+                if (c.dateFinCampagne) {
+                  const year = new Date(c.dateFinCampagne).getFullYear();
+                  if (!yearStats[year]) yearStats[year] = { count: 0, total: 0, delivered: 0 };
+                  yearStats[year].count++;
+                  yearStats[year].total += c.prixPledge + c.fraisPort + (c.addons || []).reduce((sum, a) => sum + a.prix * a.quantite, 0);
+                  if (c.statut === 'Livré') yearStats[year].delivered++;
+                }
+              });
 
-              return (
-                <React.Fragment key={campagne.id}>
-                  {showYearSeparator && (
-                    <tr>
-                      <td colSpan={visibleColumns.length} className="py-1 bg-slate-200">
-                        <div className="text-xs font-semibold text-slate-500 text-center">{currentYear}</div>
-                      </td>
+              return campagnes.map((campagne, index) => {
+                // Séparateur d'année si tri par dateFinCampagne
+                const currentYear = campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).getFullYear() : null;
+                const prevYear = index > 0 && campagnes[index - 1]?.dateFinCampagne
+                  ? new Date(campagnes[index - 1].dateFinCampagne!).getFullYear()
+                  : null;
+                const showYearSeparator = sortField === 'dateFinCampagne' && currentYear && (index === 0 || currentYear !== prevYear);
+                const stats = currentYear ? yearStats[currentYear] : null;
+
+                return (
+                  <React.Fragment key={campagne.id}>
+                    {showYearSeparator && stats && (
+                      <tr>
+                        <td colSpan={visibleColumns.length} className="py-1.5 bg-slate-200">
+                          <div className="flex items-center justify-center gap-4 text-xs font-semibold text-slate-600">
+                            <span className="text-slate-800">{currentYear}</span>
+                            <span>•</span>
+                            <span>{stats.count} campagne{stats.count > 1 ? 's' : ''}</span>
+                            <span>•</span>
+                            <span className="text-primary-600">{stats.total.toLocaleString('fr-FR')} €</span>
+                            <span>•</span>
+                            <span className="text-green-600">{stats.delivered} livrée{stats.delivered > 1 ? 's' : ''}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    <tr
+                      className="hover:brightness-95 cursor-pointer transition-all border-b border-slate-100"
+                      style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
+                      onClick={() => onRowClick(campagne)}
+                    >
+                      {visibleColumns.map(column => renderCell(campagne, column))}
                     </tr>
-                  )}
-                  <tr
-                    className="hover:brightness-95 cursor-pointer transition-all border-b border-slate-100"
-                    style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
-                    onClick={() => onRowClick(campagne)}
-                  >
-                    {visibleColumns.map(column => renderCell(campagne, column))}
-                  </tr>
-                </React.Fragment>
-              );
-            })}
+                  </React.Fragment>
+                );
+              });
+            })()}
           </tbody>
         </table>
       </div>
