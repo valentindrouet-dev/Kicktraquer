@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Campagne } from '@/types';
 import { Pencil, ExternalLink, Truck, ChevronUp, ChevronDown, ChevronsUpDown, Settings2, Check } from 'lucide-react';
 
@@ -353,21 +353,32 @@ export default function CampagneTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody>
             {campagnes.map((campagne, index) => {
               // Séparateur d'année si tri par dateFinCampagne
-              const showYearSeparator = sortField === 'dateFinCampagne' && index > 0 && campagne.dateFinCampagne && campagnes[index - 1]?.dateFinCampagne &&
-                new Date(campagne.dateFinCampagne).getFullYear() !== new Date(campagnes[index - 1].dateFinCampagne!).getFullYear();
+              const currentYear = campagne.dateFinCampagne ? new Date(campagne.dateFinCampagne).getFullYear() : null;
+              const prevYear = index > 0 && campagnes[index - 1]?.dateFinCampagne
+                ? new Date(campagnes[index - 1].dateFinCampagne!).getFullYear()
+                : null;
+              const showYearSeparator = sortField === 'dateFinCampagne' && index > 0 && currentYear && prevYear && currentYear !== prevYear;
 
               return (
-                <tr
-                  key={campagne.id}
-                  className={`hover:brightness-95 cursor-pointer transition-all ${showYearSeparator ? 'border-t-4 border-slate-300' : ''}`}
-                  style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
-                  onClick={() => onRowClick(campagne)}
-                >
-                  {visibleColumns.map(column => renderCell(campagne, column))}
-                </tr>
+                <React.Fragment key={campagne.id}>
+                  {showYearSeparator && (
+                    <tr>
+                      <td colSpan={visibleColumns.length} className="py-1 bg-slate-200">
+                        <div className="text-xs font-semibold text-slate-500 text-center">{currentYear}</div>
+                      </td>
+                    </tr>
+                  )}
+                  <tr
+                    className="hover:brightness-95 cursor-pointer transition-all border-b border-slate-100"
+                    style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
+                    onClick={() => onRowClick(campagne)}
+                  >
+                    {visibleColumns.map(column => renderCell(campagne, column))}
+                  </tr>
+                </React.Fragment>
               );
             })}
           </tbody>
