@@ -218,12 +218,20 @@ export default function CampagneTable({
         );
       case 'niveauPledge':
         return <td key={column.id} className="py-3 px-4 text-sm text-slate-600">{campagne.niveauPledge || '-'}</td>;
-      case 'prixPledge':
+      case 'prixPledge': {
+        const hasExtras = campagne.fraisPort > 0 || totalAddons > 0;
+        const breakdown = hasExtras
+          ? `Pledge: ${formatMontant(campagne.prixPledge, campagne.devise)}${campagne.fraisPort > 0 ? `\nFrais port: ${formatMontant(campagne.fraisPort, campagne.devise)}` : ''}${totalAddons > 0 ? `\nAdd-ons: ${formatMontant(totalAddons, campagne.devise)}` : ''}`
+          : '';
         return (
-          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 font-medium text-right">
-            {formatMontant(totalDu, campagne.devise)}
+          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 font-medium text-right" title={breakdown}>
+            <span className="flex items-center justify-end gap-1">
+              {formatMontant(totalDu, campagne.devise)}
+              {hasExtras && <span className="text-[10px] text-slate-400">*</span>}
+            </span>
           </td>
         );
+      }
       case 'fraisPort':
         return (
           <td key={column.id} className="py-3 px-4 text-sm text-slate-600 text-right">

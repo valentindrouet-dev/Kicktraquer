@@ -89,8 +89,17 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
         return campagne.editeur;
       case 'plateforme':
         return campagne.plateforme;
-      case 'prixPledge':
-        return formatMontant(campagne.prixPledge, campagne.devise);
+      case 'prixPledge': {
+        // Afficher le total avec indication des extras
+        const hasExtras = campagne.fraisPort > 0 || totalAddons > 0;
+        if (hasExtras) {
+          const parts = [`${formatMontant(campagne.prixPledge, campagne.devise)}`];
+          if (campagne.fraisPort > 0) parts.push(`+${Math.round(campagne.fraisPort)} FP`);
+          if (totalAddons > 0) parts.push(`+${Math.round(totalAddons)} add`);
+          return `${formatMontant(totalDu, campagne.devise)} (${parts.join(' ')})`;
+        }
+        return formatMontant(totalDu, campagne.devise);
+      }
       case 'dateAjout':
         return campagne.dateAjout ? new Date(campagne.dateAjout).toLocaleDateString('fr-FR') : '-';
       case 'livraison':
