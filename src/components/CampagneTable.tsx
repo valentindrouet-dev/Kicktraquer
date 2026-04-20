@@ -354,16 +354,22 @@ export default function CampagneTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {campagnes.map((campagne) => (
-              <tr
-                key={campagne.id}
-                className="hover:brightness-95 cursor-pointer transition-all"
-                style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
-                onClick={() => onRowClick(campagne)}
-              >
-                {visibleColumns.map(column => renderCell(campagne, column))}
-              </tr>
-            ))}
+            {campagnes.map((campagne, index) => {
+              // Séparateur d'année si tri par dateFinCampagne
+              const showYearSeparator = sortField === 'dateFinCampagne' && index > 0 && campagne.dateFinCampagne && campagnes[index - 1]?.dateFinCampagne &&
+                new Date(campagne.dateFinCampagne).getFullYear() !== new Date(campagnes[index - 1].dateFinCampagne!).getFullYear();
+
+              return (
+                <tr
+                  key={campagne.id}
+                  className={`hover:brightness-95 cursor-pointer transition-all ${showYearSeparator ? 'border-t-4 border-slate-300' : ''}`}
+                  style={{ backgroundColor: getBackgroundColor(campagne.propriete) }}
+                  onClick={() => onRowClick(campagne)}
+                >
+                  {visibleColumns.map(column => renderCell(campagne, column))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
