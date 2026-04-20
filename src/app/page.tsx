@@ -36,7 +36,7 @@ export default function HomePage() {
   const [selectedStatut, setSelectedStatut] = useState<string>('');
   const [selectedPropriete, setSelectedPropriete] = useState<string>('');
   const [cardSize, setCardSize] = useState(2); // 0-4
-  const [sortField, setSortField] = useState<SortField>('livraison');
+  const [sortField, setSortField] = useState<SortField>('dateFinCampagne');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'timeline'>('grid');
   const [tableColumns, setTableColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
@@ -243,6 +243,11 @@ export default function HomePage() {
           const finCampA = a.dateFinCampagne || '';
           const finCampB = b.dateFinCampagne || '';
           comparison = finCampA.localeCompare(finCampB);
+          break;
+        case 'totalDu':
+          const totalA = a.prixPledge + a.fraisPort + (a.addons || []).reduce((sum, ad) => sum + (ad.prix * ad.quantite), 0);
+          const totalB = b.prixPledge + b.fraisPort + (b.addons || []).reduce((sum, ad) => sum + (ad.prix * ad.quantite), 0);
+          comparison = totalA - totalB;
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -593,13 +598,14 @@ export default function HomePage() {
                 <option value="editeur">Éditeur</option>
                 <option value="plateforme">Plateforme</option>
                 <option value="statut">Statut</option>
-                <option value="prixPledge">Prix</option>
-                <option value="dateAjout">Date d'ajout</option>
+                <option value="prixPledge">Prix pledge</option>
+                <option value="totalDu">Total</option>
+                <option value="dateFinCampagne">Fin de campagne</option>
                 <option value="livraison">Livraison</option>
+                <option value="dateAjout">Date d'ajout</option>
                 <option value="langue">Langue</option>
                 <option value="financementTotal">Financement Total</option>
                 <option value="nombreFigurines">Nombre de figurines</option>
-                <option value="dateFinCampagne">Date de fin de campagne</option>
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Campagne } from '@/types';
 import { Pencil, ExternalLink, Truck, ChevronUp, ChevronDown, ChevronsUpDown, Settings2, Check } from 'lucide-react';
 
-export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines' | 'dateFinCampagne';
+export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines' | 'dateFinCampagne' | 'totalDu';
 type SortOrder = 'asc' | 'desc';
 
 export interface ColumnConfig {
@@ -18,19 +18,22 @@ export interface ColumnConfig {
 export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'nomJeu', label: 'Jeu', sortField: 'nomJeu', visible: true, align: 'left' },
   { id: 'editeur', label: 'Éditeur', sortField: 'editeur', visible: true, align: 'left' },
-  { id: 'plateforme', label: 'Plateforme', sortField: 'plateforme', visible: true, align: 'left' },
   { id: 'statut', label: 'Statut', sortField: 'statut', visible: true, align: 'left' },
-  { id: 'niveauPledge', label: 'Pledge', sortField: 'niveauPledge', visible: true, align: 'left' },
-  { id: 'prixPledge', label: 'Prix Pledge', sortField: 'prixPledge', visible: true, align: 'right' },
-  { id: 'fraisPort', label: 'Frais de port', sortField: 'fraisPort', visible: false, align: 'right' },
-  { id: 'totalPaye', label: 'Payé', sortField: 'totalPaye', visible: true, align: 'right' },
-  { id: 'livraison', label: 'Livraison', sortField: 'livraison', visible: true, align: 'left' },
+  { id: 'prixPledge', label: 'Prix', sortField: 'prixPledge', visible: true, align: 'right' },
+  { id: 'fraisPort', label: 'FP', sortField: 'fraisPort', visible: true, align: 'right' },
+  { id: 'totalDu', label: 'Total', sortField: 'totalDu', visible: true, align: 'right' },
+  { id: 'dateFinCampagne', label: 'Fin campagne', sortField: 'dateFinCampagne', visible: true, align: 'left' },
+  { id: 'propriete', label: 'Proprio', sortField: 'propriete', visible: true, align: 'left' },
+  { id: 'actions', label: '', visible: true, align: 'center' },
+  // Colonnes masquées par défaut
+  { id: 'plateforme', label: 'Plateforme', sortField: 'plateforme', visible: false, align: 'left' },
+  { id: 'niveauPledge', label: 'Pledge', sortField: 'niveauPledge', visible: false, align: 'left' },
+  { id: 'totalPaye', label: 'Payé', sortField: 'totalPaye', visible: false, align: 'right' },
+  { id: 'livraison', label: 'Livraison', sortField: 'livraison', visible: false, align: 'left' },
   { id: 'langue', label: 'Langue', sortField: 'langue', visible: false, align: 'left' },
-  { id: 'propriete', label: 'Propriété', sortField: 'propriete', visible: false, align: 'left' },
   { id: 'financementTotal', label: 'Financement', sortField: 'financementTotal', visible: false, align: 'right' },
   { id: 'nombreFigurines', label: 'Figurines', sortField: 'nombreFigurines', visible: false, align: 'right' },
   { id: 'dateAjout', label: 'Date ajout', sortField: 'dateAjout', visible: false, align: 'left' },
-  { id: 'actions', label: 'Actions', visible: true, align: 'center' },
 ];
 
 interface CampagneTableProps {
@@ -211,20 +214,26 @@ export default function CampagneTable({
         );
       case 'niveauPledge':
         return <td key={column.id} className="py-3 px-4 text-sm text-slate-600">{campagne.niveauPledge || '-'}</td>;
-      case 'prixPledge': {
-        const hasExtras = campagne.fraisPort > 0 || totalAddons > 0;
-        const breakdown = hasExtras
-          ? `Pledge: ${formatMontant(campagne.prixPledge, campagne.devise)}${campagne.fraisPort > 0 ? `\nFrais port: ${formatMontant(campagne.fraisPort, campagne.devise)}` : ''}${totalAddons > 0 ? `\nAdd-ons: ${formatMontant(totalAddons, campagne.devise)}` : ''}`
-          : '';
+      case 'prixPledge':
         return (
-          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 font-medium text-right" title={breakdown}>
-            <span className="flex items-center justify-end gap-1">
-              {formatMontant(totalDu, campagne.devise)}
-              {hasExtras && <span className="text-[10px] text-slate-400">*</span>}
-            </span>
+          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 text-right">
+            {formatMontant(campagne.prixPledge, campagne.devise)}
           </td>
         );
-      }
+      case 'totalDu':
+        return (
+          <td key={column.id} className="py-3 px-4 text-sm text-slate-800 font-medium text-right">
+            {formatMontant(totalDu, campagne.devise)}
+          </td>
+        );
+      case 'dateFinCampagne':
+        return (
+          <td key={column.id} className="py-3 px-4 text-sm text-slate-600">
+            {campagne.dateFinCampagne
+              ? new Date(campagne.dateFinCampagne).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+              : '-'}
+          </td>
+        );
       case 'fraisPort':
         return (
           <td key={column.id} className="py-3 px-4 text-sm text-right">
