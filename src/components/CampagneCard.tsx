@@ -164,8 +164,8 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
             <span className={`badge ${getStatutBadgeClass(campagne.statut)}`}>
               {campagne.statut}
             </span>
-            {/* Icône frais de port non renseignés */}
-            {(!campagne.fraisPort || campagne.fraisPort === 0) && (
+            {/* Icône frais de port non payés */}
+            {!campagne.fraisPortPayes && (
               <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
                 <Truck className="w-3 h-3 text-white" />
               </div>
@@ -173,7 +173,7 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
           </div>
         )}
         {/* Indicateur frais de port en mode mini */}
-        {isMinimalMode && (!campagne.fraisPort || campagne.fraisPort === 0) && (
+        {isMinimalMode && !campagne.fraisPortPayes && (
           <div className="absolute top-1 left-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
             <Truck className="w-2.5 h-2.5 text-white" />
           </div>

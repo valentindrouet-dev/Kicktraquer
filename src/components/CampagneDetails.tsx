@@ -238,15 +238,14 @@ export default function CampagneDetails({ campagne, onClose, onEdit, onToggleDej
               <div>
                 <p className="text-xs text-slate-500">Frais de port</p>
                 <p className="font-medium flex items-center gap-2">
-                  {campagne.fraisPort && campagne.fraisPort > 0
-                    ? formatMontant(campagne.fraisPort, campagne.devise)
-                    : <span className="flex items-center gap-1">
-                        <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
-                          <Truck className="w-3 h-3 text-white" />
-                        </span>
-                        <span className="text-red-600 text-sm">Non réglés</span>
+                  {formatMontant(campagne.fraisPort || 0, campagne.devise)}
+                  {!campagne.fraisPortPayes && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
+                        <Truck className="w-3 h-3 text-white" />
                       </span>
-                  }
+                    </span>
+                  )}
                 </p>
               </div>
               {campagne.idEngagement && (

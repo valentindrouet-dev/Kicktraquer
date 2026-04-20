@@ -208,7 +208,7 @@ export default function CampagneTable({
               <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(campagne.statut)}`}>
                 {campagne.statut}
               </span>
-              {(!campagne.fraisPort || campagne.fraisPort === 0) && (
+              {!campagne.fraisPortPayes && (
                 <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
                   <Truck className="w-3 h-3 text-white" />
                 </div>
