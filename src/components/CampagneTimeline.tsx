@@ -191,8 +191,8 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                               )}
                             </div>
 
-                            {/* Indicateur frais de port non renseignés */}
-                            {(!campagne.fraisPort || campagne.fraisPort === 0) && (
+                            {/* Indicateur frais de port non payés */}
+                            {!campagne.fraisPortPayes && (
                               <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
                                 <Truck className="w-2.5 h-2.5 text-white" />
                               </div>
@@ -229,8 +229,8 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                       >
                         <span className="text-slate-400 text-xs">{MOIS[Number(mois) - 1]}</span>
                         <span className="font-medium text-slate-700">{campagne.nomJeu}</span>
-                        {(!campagne.fraisPort || campagne.fraisPort === 0) && (
-                          <span className="w-2 h-2 bg-red-500 rounded-full" title="Frais de port non réglés" />
+                        {!campagne.fraisPortPayes && (
+                          <span className="w-2 h-2 bg-red-500 rounded-full" title="Frais de port non payés" />
                         )}
                       </button>
                     ))
@@ -278,8 +278,8 @@ export default function CampagneTimeline({ campagnes, onCampagneClick, onEdit }:
                     )}
                   </div>
 
-                  {(!campagne.fraisPort || campagne.fraisPort === 0) && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non réglés">
+                  {!campagne.fraisPortPayes && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center" title="Frais de port non payés">
                       <Truck className="w-2.5 h-2.5 text-white" />
                     </div>
                   )}
