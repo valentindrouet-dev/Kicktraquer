@@ -400,18 +400,18 @@ export default function CampagneTable({
                     {showYearSeparator && stats && (
                       <tr>
                         <td colSpan={visibleColumns.length} className="py-2 px-2">
-                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-600 bg-slate-200 rounded-lg py-2">
-                            <span className="text-base font-bold text-slate-800">{currentYear}</span>
+                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-200 bg-slate-500 rounded-lg py-2">
+                            <span className="text-base font-bold text-white">{currentYear}</span>
                             <span className="text-slate-400">•</span>
                             <span>{stats.count} campagne{stats.count > 1 ? 's' : ''}</span>
                             <span className="text-slate-400">•</span>
-                            <span className="text-primary-600 font-semibold">{stats.total.toLocaleString('fr-FR')} €</span>
+                            <span className="text-cyan-300 font-semibold">{stats.total.toLocaleString('fr-FR')} €</span>
                             <span className="text-slate-400">•</span>
-                            <span className="text-green-600">{stats.delivered} reçue{stats.delivered > 1 ? 's' : ''}</span>
+                            <span className="text-green-300">{stats.delivered} reçue{stats.delivered > 1 ? 's' : ''}</span>
                             {stats.resold > 0 && (
                               <>
                                 <span className="text-slate-400">•</span>
-                                <span className="text-orange-500">{stats.resold} revendue{stats.resold > 1 ? 's' : ''}</span>
+                                <span className="text-orange-300">{stats.resold} revendue{stats.resold > 1 ? 's' : ''}</span>
                               </>
                             )}
                           </div>
