@@ -360,7 +360,7 @@ export default function CampagneTable({
               const prevYear = index > 0 && campagnes[index - 1]?.dateFinCampagne
                 ? new Date(campagnes[index - 1].dateFinCampagne!).getFullYear()
                 : null;
-              const showYearSeparator = sortField === 'dateFinCampagne' && index > 0 && currentYear && prevYear && currentYear !== prevYear;
+              const showYearSeparator = sortField === 'dateFinCampagne' && currentYear && (index === 0 || currentYear !== prevYear);
 
               return (
                 <React.Fragment key={campagne.id}>
