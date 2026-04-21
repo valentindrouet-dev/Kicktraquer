@@ -22,6 +22,7 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'prixPledge', label: 'Prix', sortField: 'prixPledge', visible: true, align: 'right' },
   { id: 'fraisPort', label: 'FP', sortField: 'fraisPort', visible: true, align: 'right' },
   { id: 'totalDu', label: 'Total', sortField: 'totalDu', visible: true, align: 'right' },
+  { id: 'prixRevente', label: 'Prix revente', sortField: 'prixRevente', visible: false, align: 'right' },
   { id: 'dateFinCampagne', label: 'Fin campagne', sortField: 'dateFinCampagne', visible: true, align: 'left' },
   { id: 'propriete', label: 'Proprio', sortField: 'propriete', visible: true, align: 'left' },
   { id: 'actions', label: '', visible: true, align: 'center' },
@@ -34,7 +35,6 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'financementTotal', label: 'Financement', sortField: 'financementTotal', visible: false, align: 'right' },
   { id: 'nombreFigurines', label: 'Figurines', sortField: 'nombreFigurines', visible: false, align: 'right' },
   { id: 'dateAjout', label: 'Date ajout', sortField: 'dateAjout', visible: false, align: 'left' },
-  { id: 'prixRevente', label: 'Prix revente', sortField: 'prixRevente', visible: false, align: 'right' },
 ];
 
 interface CampagneTableProps {
