@@ -99,7 +99,7 @@ export default function CampagneModal({
   const handleAddPaiement = () => {
     const newPaiement: Paiement = {
       id: uuidv4(),
-      date: new Date().toISOString().split('T')[0],
+      date: formData.dateFinCampagne || new Date().toISOString().split('T')[0],
       montant: 0,
       type: parametres.typesPaiement[0] || 'Pledge initial',
     };
