@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Campagne } from '@/types';
 import { Pencil, ExternalLink, Truck, ChevronUp, ChevronDown, ChevronsUpDown, Settings2, Check } from 'lucide-react';
 
-export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines' | 'dateFinCampagne' | 'totalDu';
+export type SortField = 'nomJeu' | 'editeur' | 'plateforme' | 'prixPledge' | 'dateAjout' | 'livraison' | 'langue' | 'financementTotal' | 'statut' | 'niveauPledge' | 'fraisPort' | 'totalPaye' | 'propriete' | 'nombreFigurines' | 'dateFinCampagne' | 'totalDu' | 'prixRevente';
 type SortOrder = 'asc' | 'desc';
 
 export interface ColumnConfig {
@@ -34,6 +34,7 @@ export const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'financementTotal', label: 'Financement', sortField: 'financementTotal', visible: false, align: 'right' },
   { id: 'nombreFigurines', label: 'Figurines', sortField: 'nombreFigurines', visible: false, align: 'right' },
   { id: 'dateAjout', label: 'Date ajout', sortField: 'dateAjout', visible: false, align: 'left' },
+  { id: 'prixRevente', label: 'Prix revente', sortField: 'prixRevente', visible: false, align: 'right' },
 ];
 
 interface CampagneTableProps {
@@ -307,6 +308,14 @@ export default function CampagneTable({
                 </a>
               )}
             </div>
+          </td>
+        );
+      case 'prixRevente':
+        return (
+          <td key={column.id} className="py-3 px-4 text-sm text-right">
+            {campagne.prixRevente ? (
+              <span className="text-orange-500 font-medium">{formatMontant(campagne.prixRevente, campagne.devise)}</span>
+            ) : '-'}
           </td>
         );
       default:
