@@ -96,12 +96,28 @@ export default function CampagneModal({
     onSave(newCampagne);
   };
 
+  // Calcul du montant par défaut selon le type de paiement
+  const getMontantForType = (type: string): number => {
+    const typeLower = type.toLowerCase();
+    if (typeLower.includes('pledge') || typeLower.includes('initial')) {
+      return Number(formData.prixPledge) || 0;
+    }
+    if (typeLower.includes('frais') || typeLower.includes('port') || typeLower.includes('shipping')) {
+      return Number(formData.fraisPort) || 0;
+    }
+    if (typeLower.includes('add-on') || typeLower.includes('addon') || typeLower.includes('extra')) {
+      return formData.addons.reduce((sum, a) => sum + (Number(a.prix) * Number(a.quantite)), 0);
+    }
+    return 0;
+  };
+
   const handleAddPaiement = () => {
+    const defaultType = parametres.typesPaiement[0] || 'Pledge initial';
     const newPaiement: Paiement = {
       id: uuidv4(),
       date: formData.dateFinCampagne || new Date().toISOString().split('T')[0],
-      montant: 0,
-      type: parametres.typesPaiement[0] || 'Pledge initial',
+      montant: getMontantForType(defaultType),
+      type: defaultType,
     };
     setFormData({
       ...formData,
@@ -112,6 +128,10 @@ export default function CampagneModal({
   const handleUpdatePaiement = (index: number, field: keyof Paiement, value: string | number) => {
     const updatedPaiements = [...formData.paiements];
     updatedPaiements[index] = { ...updatedPaiements[index], [field]: value };
+    // Si on change le type, on met à jour le montant avec la valeur par défaut
+    if (field === 'type' && typeof value === 'string') {
+      updatedPaiements[index].montant = getMontantForType(value);
+    }
     setFormData({ ...formData, paiements: updatedPaiements });
   };
 
