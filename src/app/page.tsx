@@ -150,9 +150,9 @@ export default function HomePage() {
       result = result.filter((c) => c.statut === 'Revendu');
     }
 
-    // Filtre Non Joués uniquement
+    // Filtre Non Joués uniquement (exclut aussi les revendus car on ne peut plus y jouer)
     if (showNonJouesOnly) {
-      result = result.filter((c) => !c.dejaJoue);
+      result = result.filter((c) => !c.dejaJoue && c.statut !== 'Revendu');
     }
 
     // Filtre JDR uniquement
