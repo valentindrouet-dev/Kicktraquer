@@ -88,12 +88,16 @@ export default function StatistiquesPage() {
     const pledgeRanges: Record<string, number> = { '0-50': 0, '50-100': 0, '100-200': 0, '200-500': 0, '500+': 0 };
     const topPledges: { nom: string; total: number }[] = [];
     const delaisLivraison: number[] = [];
+    const delaisLivraisonJdr: number[] = [];
+    const delaisLivraisonJeux: number[] = [];
 
     let totalPledge = 0, totalFraisPort = 0, totalAddons = 0, totalPaye = 0;
     let totalFinancementGlobal = 0, totalFigurines = 0, campagnesAvecFigurines = 0;
     let fraisPortNonRenseignes = 0, jeuxJoues = 0, jeuxNonJoues = 0;
     let campagnesAnnulees = 0, campagnesRemboursees = 0, campagnesRevendues = 0;
     let totalJdr = 0, totalReventes = 0, totalPrixRevente = 0, totalCoutJeuxRevendus = 0;
+    let totalPledgeJdr = 0, totalPledgeJeux = 0;
+    let livreesJdr = 0, livreesJeux = 0;
 
     filteredCampagnes.forEach((c) => {
       const multiplier = c.devise === deviseAffichage ? 1 :
@@ -124,7 +128,14 @@ export default function StatistiquesPage() {
         totalCoutJeuxRevendus += totalCampagne;
         if (c.prixRevente) totalPrixRevente += c.prixRevente * multiplier;
       }
-      if (c.jdr) totalJdr++;
+      if (c.jdr) {
+        totalJdr++;
+        totalPledgeJdr += pledgeConverti;
+        if (c.statut === 'Livré') livreesJdr++;
+      } else {
+        totalPledgeJeux += pledgeConverti;
+        if (c.statut === 'Livré') livreesJeux++;
+      }
 
       // Campagnes par année (date de fin de campagne)
       if (c.dateFinCampagne) {
@@ -151,7 +162,14 @@ export default function StatistiquesPage() {
         const moisLiv = c.moisLivraison || 6; // Par défaut milieu d'année
         const fin = new Date(c.anneeLivraison, moisLiv - 1, 1);
         const delaiMois = (fin.getFullYear() - debut.getFullYear()) * 12 + (fin.getMonth() - debut.getMonth());
-        if (delaiMois > 0) delaisLivraison.push(delaiMois);
+        if (delaiMois > 0) {
+          delaisLivraison.push(delaiMois);
+          if (c.jdr) {
+            delaisLivraisonJdr.push(delaiMois);
+          } else {
+            delaisLivraisonJeux.push(delaiMois);
+          }
+        }
       }
 
       // Distribution des pledges
@@ -242,6 +260,17 @@ export default function StatistiquesPage() {
     const delaiMoyenLivraison = delaisLivraison.length > 0
       ? delaisLivraison.reduce((a, b) => a + b, 0) / delaisLivraison.length
       : null;
+    const delaiMoyenLivraisonJdr = delaisLivraisonJdr.length > 0
+      ? delaisLivraisonJdr.reduce((a, b) => a + b, 0) / delaisLivraisonJdr.length
+      : null;
+    const delaiMoyenLivraisonJeux = delaisLivraisonJeux.length > 0
+      ? delaisLivraisonJeux.reduce((a, b) => a + b, 0) / delaisLivraisonJeux.length
+      : null;
+
+    // Nombre de jeux de société (non-JDR)
+    const totalJeux = filteredCampagnes.length - totalJdr;
+    const moyennePledgeJdr = totalJdr > 0 ? totalPledgeJdr / totalJdr : 0;
+    const moyennePledgeJeux = totalJeux > 0 ? totalPledgeJeux / totalJeux : 0;
 
     // Évolution pledge moyen par année
     const pledgeMoyenParAnnee = Object.entries(pledgeParAnnee)
@@ -278,6 +307,11 @@ export default function StatistiquesPage() {
       totalJdr, totalReventes, totalPrixRevente, totalCoutJeuxRevendus,
       coutNetApresReventes: totalDu - totalPrixRevente,
       bilanReventes: totalPrixRevente - totalCoutJeuxRevendus,
+      // Stats JDR vs Jeux de société
+      totalJeux,
+      moyennePledgeJdr, moyennePledgeJeux,
+      delaiMoyenLivraisonJdr, delaiMoyenLivraisonJeux,
+      livreesJdr, livreesJeux,
     };
   }, [filteredCampagnes, deviseAffichage]);
 
@@ -403,6 +437,59 @@ export default function StatistiquesPage() {
                 )}
               </div>
             </div>
+
+            {/* Comparaison JDR vs Jeux de société */}
+            {stats.totalJdr > 0 && stats.totalJeux > 0 && (
+              <div className="bg-white rounded-lg border border-slate-200 p-3 mb-4">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2 flex items-center gap-1">
+                  📚 JDR/Livres vs 🎲 Jeux de société
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Jeux de société */}
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🎲</span>
+                      <span className="font-semibold text-blue-800">Jeux de société</span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">Nombre</span>
+                        <span className="font-medium text-blue-800">{stats.totalJeux}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">Pledge moyen</span>
+                        <span className="font-medium text-blue-800">{formatMontant(stats.moyennePledgeJeux)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">Livrés</span>
+                        <span className="font-medium text-blue-800">{stats.livreesJeux}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* JDR / Livres */}
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">📚</span>
+                      <span className="font-semibold text-purple-800">JDR / Livres</span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-purple-600">Nombre</span>
+                        <span className="font-medium text-purple-800">{stats.totalJdr}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-purple-600">Pledge moyen</span>
+                        <span className="font-medium text-purple-800">{formatMontant(stats.moyennePledgeJdr)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-purple-600">Livrés</span>
+                        <span className="font-medium text-purple-800">{stats.livreesJdr}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Statistiques par Propriété */}
             {Object.keys(stats.parPropriete).length > 0 && (
@@ -859,12 +946,29 @@ export default function StatistiquesPage() {
 
               {/* Délai de livraison */}
               <div className="bg-white rounded-lg border border-slate-200 p-3">
-                <h2 className="text-sm font-semibold text-slate-800 mb-2">⏱️ Délais</h2>
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">⏱️ Délais de livraison</h2>
                 <div className="space-y-3">
                   {stats.delaiMoyenLivraison !== null && (
                     <div className="text-center p-3 bg-slate-50 rounded-lg">
                       <div className="text-3xl font-bold text-primary-600">{stats.delaiMoyenLivraison.toFixed(1)}</div>
-                      <div className="text-xs text-slate-500">mois en moyenne entre fin de campagne et livraison</div>
+                      <div className="text-xs text-slate-500">mois en moyenne (global)</div>
+                    </div>
+                  )}
+                  {/* Détail JDR vs Jeux de société */}
+                  {stats.totalJdr > 0 && (stats.delaiMoyenLivraisonJeux !== null || stats.delaiMoyenLivraisonJdr !== null) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {stats.delaiMoyenLivraisonJeux !== null && (
+                        <div className="text-center p-2 bg-blue-50 rounded-lg">
+                          <div className="text-lg font-bold text-blue-600">{stats.delaiMoyenLivraisonJeux.toFixed(1)}</div>
+                          <div className="text-[10px] text-blue-500">mois - Jeux ({stats.livreesJeux})</div>
+                        </div>
+                      )}
+                      {stats.delaiMoyenLivraisonJdr !== null && (
+                        <div className="text-center p-2 bg-purple-50 rounded-lg">
+                          <div className="text-lg font-bold text-purple-600">{stats.delaiMoyenLivraisonJdr.toFixed(1)}</div>
+                          <div className="text-[10px] text-purple-500">mois - JDR ({stats.livreesJdr})</div>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className="text-sm space-y-1">
