@@ -54,6 +54,7 @@ const EMPTY_CAMPAGNE: Omit<Campagne, 'id' | 'dateAjout'> = {
   notes: '',
   dejaJoue: false,
   jdr: false,
+  print3d: false,
   prixRevente: undefined,
 };
 
@@ -656,6 +657,15 @@ export default function CampagneModal({
                 className="w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500"
               />
               <span className="text-sm font-medium text-slate-700">JDR / Livre</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.print3d || false}
+                onChange={(e) => setFormData({ ...formData, print3d: e.target.checked })}
+                className="w-5 h-5 text-cyan-600 rounded border-slate-300 focus:ring-cyan-500"
+              />
+              <span className="text-sm font-medium text-slate-700">3D Print</span>
             </label>
           </div>
 

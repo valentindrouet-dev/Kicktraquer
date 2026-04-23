@@ -54,6 +54,7 @@ export interface Campagne {
   dateAjout: string;
   dejaJoue?: boolean;      // Le jeu a-t-il déjà été joué ?
   jdr?: boolean;           // Jeu de rôle / livre (pas un jeu de société) ?
+  print3d?: boolean;       // Fichiers 3D Print ?
   prixRevente?: number;    // Prix auquel le jeu a été revendu
 }
 

@@ -38,6 +38,7 @@ function toSnakeCase(campagne: Campagne): Record<string, unknown> {
     date_ajout: campagne.dateAjout,
     deja_joue: campagne.dejaJoue || false,
     jdr: campagne.jdr || false,
+    print3d: campagne.print3d || false,
     prix_revente: campagne.prixRevente || null,
   };
 }
@@ -69,6 +70,7 @@ function toCamelCase(row: Record<string, unknown>): Campagne {
     dateAjout: row.date_ajout as string,
     dejaJoue: row.deja_joue as boolean,
     jdr: row.jdr as boolean,
+    print3d: row.print3d as boolean,
     prixRevente: row.prix_revente ? Number(row.prix_revente) : undefined,
     paiements: [],
     addons: [],

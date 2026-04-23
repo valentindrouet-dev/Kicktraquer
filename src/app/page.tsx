@@ -43,6 +43,7 @@ export default function HomePage() {
   const [showRevendus, setShowRevendus] = useState(false);
   const [showNonJouesOnly, setShowNonJouesOnly] = useState(false);
   const [showJdrOnly, setShowJdrOnly] = useState(false);
+  const [showPrint3dOnly, setShowPrint3dOnly] = useState(false);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -160,6 +161,11 @@ export default function HomePage() {
       result = result.filter((c) => c.jdr);
     }
 
+    // Filtre 3D Print uniquement
+    if (showPrint3dOnly) {
+      result = result.filter((c) => c.print3d);
+    }
+
     // Recherche
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -254,7 +260,7 @@ export default function HomePage() {
     });
 
     return result;
-  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly, showJdrOnly]);
+  }, [campagnes, searchQuery, selectedPlateforme, selectedStatut, selectedPropriete, sortField, sortOrder, showRevendus, showNonJouesOnly, showJdrOnly, showPrint3dOnly]);
 
   // Handlers
   const handleSave = async (campagne: Campagne) => {
@@ -556,6 +562,17 @@ export default function HomePage() {
                 className="w-4 h-4 rounded border-slate-300 text-purple-500 focus:ring-purple-500"
               />
               <span>JDR</span>
+            </label>
+
+            {/* Toggle 3D Print */}
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showPrint3dOnly}
+                onChange={(e) => setShowPrint3dOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-cyan-500 focus:ring-cyan-500"
+              />
+              <span>3D Print</span>
             </label>
 
             {/* Contrôle de taille */}
