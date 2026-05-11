@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Calendar } from 'lucide-react';
 import { Campagne, Paiement, Addon, Parametres, PARAMETRES_DEFAUT } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -67,6 +67,12 @@ export default function CampagneModal({
 }: CampagneModalProps) {
   const [formData, setFormData] = useState<Omit<Campagne, 'id' | 'dateAjout'>>(EMPTY_CAMPAGNE);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStretchPay, setShowStretchPay] = useState(false);
+  const [stretchPayData, setStretchPayData] = useState({
+    mensualites: 5,
+    montantTotal: 0,
+    dateDebut: '',
+  });
 
   useEffect(() => {
     if (campagne) {
@@ -141,6 +147,35 @@ export default function CampagneModal({
       ...formData,
       paiements: formData.paiements.filter((_, i) => i !== index),
     });
+  };
+
+  const handleGenerateStretchPay = () => {
+    if (stretchPayData.mensualites < 2 || stretchPayData.montantTotal <= 0 || !stretchPayData.dateDebut) {
+      return;
+    }
+
+    const montantMensuel = stretchPayData.montantTotal / stretchPayData.mensualites;
+    const dateDebut = new Date(stretchPayData.dateDebut);
+    const nouveauxPaiements: Paiement[] = [];
+
+    for (let i = 0; i < stretchPayData.mensualites; i++) {
+      const datePaiement = new Date(dateDebut);
+      datePaiement.setMonth(datePaiement.getMonth() + i);
+
+      nouveauxPaiements.push({
+        id: uuidv4(),
+        date: datePaiement.toISOString().split('T')[0],
+        montant: Math.round(montantMensuel * 100) / 100,
+        type: 'Stretch Pay',
+      });
+    }
+
+    setFormData({
+      ...formData,
+      paiements: [...formData.paiements, ...nouveauxPaiements],
+    });
+    setShowStretchPay(false);
+    setStretchPayData({ mensualites: 5, montantTotal: 0, dateDebut: '' });
   };
 
   const handleAddAddon = () => {
@@ -551,15 +586,88 @@ export default function CampagneModal({
               <label className="block text-sm font-medium text-slate-700">
                 Paiements
               </label>
-              <button
-                type="button"
-                onClick={handleAddPaiement}
-                className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
-              >
-                <Plus className="w-4 h-4" />
-                Ajouter
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowStretchPay(!showStretchPay)}
+                  className={`flex items-center gap-1 text-sm ${showStretchPay ? 'text-orange-600' : 'text-orange-500 hover:text-orange-600'}`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Stretch Pay
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddPaiement}
+                  className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  Ajouter
+                </button>
+              </div>
             </div>
+
+            {/* Formulaire Stretch Pay */}
+            {showStretchPay && (
+              <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="text-sm font-medium text-orange-800 mb-2">Paiement fractionné</div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div>
+                    <label className="block text-xs text-orange-700 mb-1">Mensualités</label>
+                    <input
+                      type="number"
+                      min="2"
+                      max="12"
+                      value={stretchPayData.mensualites}
+                      onChange={(e) => setStretchPayData({ ...stretchPayData, mensualites: parseInt(e.target.value) || 5 })}
+                      className="w-full px-2 py-1 border border-orange-300 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-orange-700 mb-1">Montant total</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={stretchPayData.montantTotal || ''}
+                      onChange={(e) => setStretchPayData({ ...stretchPayData, montantTotal: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-2 py-1 border border-orange-300 rounded text-sm"
+                      placeholder={`${formData.devise}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-orange-700 mb-1">1er paiement</label>
+                    <input
+                      type="date"
+                      value={stretchPayData.dateDebut}
+                      onChange={(e) => setStretchPayData({ ...stretchPayData, dateDebut: e.target.value })}
+                      className="w-full px-2 py-1 border border-orange-300 rounded text-sm"
+                    />
+                  </div>
+                </div>
+                {stretchPayData.montantTotal > 0 && stretchPayData.mensualites >= 2 && (
+                  <div className="text-xs text-orange-600 mb-2">
+                    → {stretchPayData.mensualites} × {(stretchPayData.montantTotal / stretchPayData.mensualites).toFixed(2)} {formData.devise}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerateStretchPay}
+                    disabled={!stretchPayData.dateDebut || stretchPayData.montantTotal <= 0}
+                    className="flex-1 px-3 py-1.5 bg-orange-500 text-white text-sm rounded hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Générer {stretchPayData.mensualites} paiements
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowStretchPay(false)}
+                    className="px-3 py-1.5 text-orange-600 text-sm hover:bg-orange-100 rounded"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
 
             {formData.paiements.length > 0 ? (
               <div className="space-y-2">
