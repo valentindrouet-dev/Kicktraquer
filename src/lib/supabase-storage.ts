@@ -308,6 +308,71 @@ export async function saveParametresSupabase(parametres: Parametres): Promise<bo
   return true;
 }
 
+// Restauration d'une sauvegarde : upsert non destructif.
+// Les campagnes absentes de la sauvegarde ne sont jamais supprimées.
+export async function restoreCampagnesSupabase(
+  campagnes: Campagne[]
+): Promise<{ count: number; errors: string[] }> {
+  const sb = getSupabase();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    return { count: 0, errors: ['Utilisateur non connecté'] };
+  }
+
+  const errors: string[] = [];
+  let count = 0;
+
+  for (const campagne of campagnes) {
+    try {
+      const { error } = await sb
+        .from('campagnes')
+        .upsert({ ...toSnakeCase(campagne), user_id: user.id }, { onConflict: 'id' });
+
+      if (error) {
+        errors.push(`"${campagne.nomJeu}": ${error.message}`);
+        continue;
+      }
+
+      // Les paiements/addons de CETTE campagne sont remplacés par ceux de la sauvegarde
+      await sb.from('paiements').delete().eq('campagne_id', campagne.id);
+      if ((campagne.paiements || []).length > 0) {
+        await sb.from('paiements').insert(
+          campagne.paiements.map(p => ({
+            id: p.id,
+            campagne_id: campagne.id,
+            user_id: user.id,
+            date: p.date,
+            montant: p.montant,
+            type: p.type,
+            notes: p.notes || null,
+          }))
+        );
+      }
+
+      await sb.from('addons').delete().eq('campagne_id', campagne.id);
+      if ((campagne.addons || []).length > 0) {
+        await sb.from('addons').insert(
+          campagne.addons.map(a => ({
+            id: a.id,
+            campagne_id: campagne.id,
+            user_id: user.id,
+            nom: a.nom,
+            prix: a.prix,
+            quantite: a.quantite,
+            langue: a.langue || null,
+          }))
+        );
+      }
+
+      count++;
+    } catch (e) {
+      errors.push(`"${campagne.nomJeu}": ${e}`);
+    }
+  }
+
+  return { count, errors };
+}
+
 // Migration des données locales vers Supabase
 export async function migrateLocalDataToSupabase(
   campagnes: Campagne[],

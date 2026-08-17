@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Rocket, Settings, Download, Upload, Plus, LogIn, LogOut, User, Cloud, CloudOff } from 'lucide-react';
-import { exportData, importData } from '@/lib/storage';
+import { Rocket, Settings, Download, Upload, Plus, LogIn, LogOut, User, Cloud, CloudOff, FileText } from 'lucide-react';
+import { buildBackup, restoreBackup } from '@/lib/backup';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthModal from './AuthModal';
 import MigrationModal from './MigrationModal';
@@ -21,33 +21,57 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMigrationModal, setShowMigrationModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
-  const handleExport = () => {
-    const data = exportData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kicktraquer-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      // Sauvegarde depuis la source réelle : Supabase si connecté, sinon local
+      const backup = await buildBackup(!!user);
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kicktraquer-sauvegarde-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erreur export:', err);
+      alert('Erreur lors de l\'export. Réessayez.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setIsImporting(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      if (importData(content)) {
-        setShowImportModal(false);
-        onDataChange?.();
-        alert('Importation réussie !');
-      } else {
-        alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+    reader.onload = async (event) => {
+      try {
+        const content = event.target?.result as string;
+        const result = await restoreBackup(content, !!user);
+        if (result.campagnes > 0 || result.jeuxAVenir > 0) {
+          setShowImportModal(false);
+          onDataChange?.();
+        }
+        alert(
+          result.errors.length > 0
+            ? `${result.message}\n\n${result.errors.slice(0, 5).join('\n')}`
+            : result.message
+        );
+      } catch (err) {
+        console.error('Erreur import:', err);
+        alert('Erreur lors de l\'importation.');
+      } finally {
+        setIsImporting(false);
+        e.target.value = '';
       }
     };
     reader.readAsText(file);
@@ -172,18 +196,30 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
 
               <button
                 onClick={handleExport}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                title="Exporter les données"
+                disabled={isExporting}
+                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
+                title={user ? 'Sauvegarder toutes les données (depuis le cloud)' : 'Sauvegarder toutes les données (locales)'}
               >
-                <Download className="w-5 h-5" />
+                <Download className={`w-5 h-5 ${isExporting ? 'animate-pulse' : ''}`} />
               </button>
               <button
                 onClick={() => setShowImportModal(true)}
                 className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                title="Importer des données"
+                title="Restaurer une sauvegarde"
               >
                 <Upload className="w-5 h-5" />
               </button>
+              <Link
+                href="/rapport"
+                className={`p-2 rounded-lg transition-colors ${
+                  pathname === '/rapport'
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+                title="Rapport complet (PDF)"
+              >
+                <FileText className="w-5 h-5" />
+              </Link>
               <Link
                 href="/parametres"
                 className={`p-2 rounded-lg transition-colors ${
@@ -270,17 +306,25 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
       {showImportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
-            <h2 className="text-xl font-bold mb-4">Importer des données</h2>
-            <p className="text-slate-600 mb-4">
-              Sélectionnez un fichier JSON exporté précédemment.
-              Attention : cela remplacera toutes vos données actuelles.
+            <h2 className="text-xl font-bold mb-4">Restaurer une sauvegarde</h2>
+            <p className="text-slate-600 mb-2">
+              Sélectionnez un fichier de sauvegarde JSON exporté précédemment.
+            </p>
+            <p className="text-sm text-slate-500 mb-4">
+              Rien n&apos;est supprimé : les campagnes de la sauvegarde sont ajoutées
+              ou mises à jour, celles absentes du fichier sont conservées.
+              {user && ' La restauration se fait dans votre compte cloud.'}
             </p>
             <input
               type="file"
               accept=".json"
               onChange={handleImport}
-              className="w-full p-2 border border-slate-300 rounded-lg mb-4"
+              disabled={isImporting}
+              className="w-full p-2 border border-slate-300 rounded-lg mb-4 disabled:opacity-50"
             />
+            {isImporting && (
+              <p className="text-sm text-primary-600 mb-2">Restauration en cours…</p>
+            )}
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowImportModal(false)}
