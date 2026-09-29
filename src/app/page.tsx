@@ -198,9 +198,13 @@ export default function HomePage() {
         case 'plateforme':
           comparison = a[sortField].localeCompare(b[sortField]);
           break;
-        case 'prixPledge':
-          comparison = a.prixPledge - b.prixPledge;
+        case 'prixPledge': {
+          // Prix total dépensé : pledge + frais de port + add-ons
+          const prixA = a.prixPledge + a.fraisPort + (a.addons || []).reduce((sum, ad) => sum + (ad.prix * ad.quantite), 0);
+          const prixB = b.prixPledge + b.fraisPort + (b.addons || []).reduce((sum, ad) => sum + (ad.prix * ad.quantite), 0);
+          comparison = prixA - prixB;
           break;
+        }
         case 'dateAjout':
           const dateA = a.dateAjout || '';
           const dateB = b.dateAjout || '';
@@ -615,7 +619,7 @@ export default function HomePage() {
                 <option value="editeur">Éditeur</option>
                 <option value="plateforme">Plateforme</option>
                 <option value="statut">Statut</option>
-                <option value="prixPledge">Prix pledge</option>
+                <option value="prixPledge">Prix</option>
                 <option value="totalDu">Total</option>
                 <option value="dateFinCampagne">Fin de campagne</option>
                 <option value="livraison">Livraison</option>
