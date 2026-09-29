@@ -90,12 +90,9 @@ export default function CampagneCard({ campagne, size, sortField, onClick, onEdi
       case 'plateforme':
         return campagne.plateforme;
       case 'prixPledge': {
-        // Total, puis le détail du calcul avec les montants exacts
-        const parts = [formatMontant(campagne.prixPledge, campagne.devise)];
-        if (campagne.fraisPort > 0) parts.push(`+${campagne.fraisPort.toFixed(2)} FP`);
-        if (totalAddons > 0) parts.push(`+${totalAddons.toFixed(2)} add`);
-        if (parts.length === 1) return formatMontant(totalDu, campagne.devise);
-        return `${formatMontant(totalDu, campagne.devise)} (${parts.join(' ')})`;
+        // Prix total dépensé, arrondi à l'euro
+        const symbols: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', CAD: 'CA$', AUD: 'AU$' };
+        return `${Math.round(totalDu)}${symbols[campagne.devise] || ` ${campagne.devise}`}`;
       }
       case 'dateAjout':
         return campagne.dateAjout ? new Date(campagne.dateAjout).toLocaleDateString('fr-FR') : '-';
