@@ -66,6 +66,10 @@ export default function Header({ onAjouter, onDataChange }: HeaderProps) {
             ? `${result.message}\n\n${result.errors.slice(0, 5).join('\n')}`
             : result.message
         );
+        // Les préférences d'affichage ne sont lues qu'au chargement de la page
+        if (result.preferences > 0) {
+          window.location.reload();
+        }
       } catch (err) {
         console.error('Erreur import:', err);
         alert('Erreur lors de l\'importation.');

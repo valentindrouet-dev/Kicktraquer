@@ -23,6 +23,45 @@ export interface BackupFile {
   campagnes: Campagne[];
   parametres: Parametres;
   jeuxAVenir: JeuAVenir[];
+  preferences?: Record<string, string>;
+}
+
+// Préférences d'affichage de la page Campagnes (tri, colonnes, vue)
+const PREFERENCE_KEYS = [
+  'kicktraquer_sortField',
+  'kicktraquer_sortOrder',
+  'kicktraquer_tableColumns',
+  'kicktraquer_viewMode',
+];
+
+function lirePreferences(): Record<string, string> {
+  const prefs: Record<string, string> = {};
+  if (typeof window === 'undefined') return prefs;
+  try {
+    PREFERENCE_KEYS.forEach((key) => {
+      const value = localStorage.getItem(key);
+      if (value !== null) prefs[key] = value;
+    });
+  } catch {
+    // localStorage indisponible : on exporte sans préférences
+  }
+  return prefs;
+}
+
+function ecrirePreferences(prefs: Record<string, string>): number {
+  if (typeof window === 'undefined') return 0;
+  let count = 0;
+  try {
+    PREFERENCE_KEYS.forEach((key) => {
+      if (typeof prefs[key] === 'string') {
+        localStorage.setItem(key, prefs[key]);
+        count++;
+      }
+    });
+  } catch {
+    // localStorage indisponible : on ignore
+  }
+  return count;
 }
 
 /**
@@ -56,6 +95,7 @@ export async function buildBackup(isLoggedIn: boolean): Promise<BackupFile> {
     campagnes,
     parametres,
     jeuxAVenir: getJeuxAVenir(),
+    preferences: lirePreferences(),
   };
 }
 
@@ -83,6 +123,7 @@ export interface RestoreResult {
   message: string;
   campagnes: number;
   jeuxAVenir: number;
+  preferences: number;
   errors: string[];
 }
 
@@ -105,6 +146,7 @@ export async function restoreBackup(
       message: 'Fichier illisible : ce n\'est pas un JSON valide.',
       campagnes: 0,
       jeuxAVenir: 0,
+      preferences: 0,
       errors: [],
     };
   }
@@ -115,6 +157,7 @@ export async function restoreBackup(
       message: 'Fichier invalide : aucune campagne trouvée.',
       campagnes: 0,
       jeuxAVenir: 0,
+      preferences: 0,
       errors: [],
     };
   }
@@ -147,6 +190,12 @@ export async function restoreBackup(
     saveJeuxAVenir(Array.from(parId.values()));
   }
 
+  // Préférences d'affichage : locales, écrasées par celles du fichier
+  const preferencesRestaurees =
+    data.preferences && typeof data.preferences === 'object'
+      ? ecrirePreferences(data.preferences)
+      : 0;
+
   return {
     ok: errors.length === 0,
     message:
@@ -155,6 +204,7 @@ export async function restoreBackup(
         : `Restauration partielle : ${campagnesRestaurees} campagne(s), ${errors.length} erreur(s).`,
     campagnes: campagnesRestaurees,
     jeuxAVenir: jeuxAVenir.length,
+    preferences: preferencesRestaurees,
     errors,
   };
 }
