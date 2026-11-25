@@ -111,11 +111,15 @@ export default function AVenirPage() {
 
   const getDaysUntil = (jeu: JeuAVenir) => {
     if (!jeu.dateDebut) return null; // Pas de countdown pour les dates imprécises
+    // Nombre de jours calendaires, les deux dates prises à minuit en heure locale.
+    // new Date('AAAA-MM-JJ') lirait la date en UTC (1h du matin à Paris) et
+    // ajouterait un jour au compte une fois arrondi.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const target = new Date(jeu.dateDebut);
-    const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
+    const [annee, mois, jour] = jeu.dateDebut.split('-').map(Number);
+    const target = new Date(annee, mois - 1, jour);
+    // Math.round absorbe l'heure en plus ou en moins des changements d'heure
+    return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   // Générer les options d'années (année actuelle + 5 ans)
